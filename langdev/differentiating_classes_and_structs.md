@@ -21,7 +21,7 @@ and compare them to modern languages.
 In computer science, a struct (also called a structure, records, compound data) is a language concept and construct used to describe a piece of data consisting of multiple values.<sup>[1]</sup>
 Structs consists of a list of field specifiers, and a name of the struct.
 A field specifier specifies the name and data type fields (also called data fields, members, data members, attributes, properties, rows, instance variables) of the struct instances.
-Some languages also support methods (also called associated methods, member functions), which provide ways of manipulating and retrieving the data of struct instances.
+Some languages also support methods (also called associated methods, member functions), which provide ways of manipulating and retrieving the data of struct instances. A struct is a description of a composite data type with optional associated behaviour.
 
 Some languages provide functionality to specify mutability of the struct, its fields or of struct instances.
 Mutability meaning the ability to change the value of fields post initialization, implying that all fields are initialized at some point during instanciation.
@@ -59,7 +59,7 @@ struct Car sports_car = {
 if (sedan.top_speed < sports_car.top_speed) { /* ... */ }
 ```
 
-C doesn't strongly support member functions, visibility modifiers or mutability specifiers on individual fields, but does support specifying mutability on entire struct instances. 
+C doesn't strongly support methods, visibility modifiers or mutability specifiers on individual fields, but does support specifying mutability on entire struct instances. 
 
 ```c
 // instantiate a non-const, ie. mutable instance
@@ -74,8 +74,10 @@ const Car minivan = {
     .passenger_capacity = 7,
 };
 
-suv.top_speed = 180; // allowed, since 'suv' is non-const/mutable
-minivan.top_speed = 150; // error, not allowed, since 'minivan' is const/immutable
+// allowed, since 'suv' is non-const/mutable
+suv.top_speed = 180;
+// error, not allowed, since 'minivan' is const/immutable
+minivan.top_speed = 150;
 ```
 
 The goal of a struct can trivially be achieved by the use of multiple variables defined seperately, the struct construct just provides an easy to read, less error prone, clear and concise way of grouping data together.
@@ -84,9 +86,11 @@ Ultimately, when using a struct, we care about the data.
 
 ### Class
 
-In OOP, a class is a concept used to describe objects (also called entities) in  an object model representing a problem space.<sup>[citation desired]</sup>
-In OOP, an object is a 'thing' with some associated behaviour. Associated behaviour is often achieved using methods (also called associated methods, member functions).
-An object may contain specific data, but objects are opaque, meaning the consumer may not access the data directly, but have to rely on methods, which are in turn allowed to access the internal data.
+In OOP, a class is a concept used to describe objects (also called entities) in an object model representing a problem space.
+Classes are the same as types from type theory.
+In OOP, an object is a 'thing' with some associated behaviour. Associated behaviour is often achieved using methods (also called associated methods, member functions). An object may contain data, but objects are opaque, meaning the consumer may not access the data directly, but have to rely on methods, which are in turn allowed to access the internal data. These restrictions are in place in order to encapsulate the data, allowing for data abstraction.<sup>[4]</sup>
+
+Notice that classes are descriptions of objects in our problem space, and not just descriptions of composite data types; 
 
 In many class-based languages (most often called OO-languages, although I dislike the term) the class concept is conveyed using a `class` construct.
 Generalized, the class construct consists of a name of the class, and a list of fields (also called data fields, members, data members, attributes, properties, rows, instance variables) as though it was a struct.
@@ -127,7 +131,11 @@ terry.changePassword("1234", "abcd");
 terry.passwordHash = "foo".toHash();
 ```
 
+In this example we can see the `passwordHash` as an example of encapsulation.
+The consumer of the interface has no idea nor influence on how the password is stored.
 In order to write code adhearing to object oriented design, you have to follow a set of principles.
+One of the most important principles, is that of encapsulation (also called information hiding).
+The principle of encapsulation 
 
 Ultimately, when using a class, we care about the behaviour.
 
@@ -136,118 +144,9 @@ Ultimately, when using a class, we care about the behaviour.
 There are cases where OOP constrained classes aren't suited the problem.
 In these cases using the class constructs in these languages, the way OO is taught, ie. encapsulation, ie. private fields, accessible through methods,
 often leads to larger amounts of code than neccessary.
-This also often leads to heaps of getters and setters, which is seen as a code smell.<sup>[11][12]</sup>
+This also often leads to heaps of getters and setters, which is seen as a code smell.<sup>[11] [12]</sup>
 
 ### PODs
-
-When using inter process communucation, you often have to send and recieve composite data types.
-These composite data types have to be serialized and deserialized as part of the communications process.
-The construction and extraction process of these composite data types can be verbose,
-if done using classes.
-
-An example of PODs using structs in C could be something like this
-
-```c
-struct UserCreateRequest {
-    char* username;
-    char* password;
-    char* email;
-    int age;
-    float height;
-};
-
-void send_request(Client* client) {
-    const struct UserCreateRequest request = {
-        .username = "testuser",
-        /* ... */
-    };
-    Serializer* serializer = serializer_new();
-    serializer_add_string_field(serializer, "username", request.username);
-    serializer_add_string_field(serializer, "password", request.password);
-    /* ... */
-    Buffer* body = serializer_make_body(serializer);
-    /* ... */
-}
-```
-
-Notice there aren't anything unnecessary in the struct definition.
-The way this code is written, would be described as procedural, and not very object oriented.
-Now with the same example in Java, adhearing to encapsulation rules.
-
-```java
-class UserCreateRequest {
-    private String username;
-    private String password;
-    private String email;
-    private int age;
-    private float height;
-
-    public UserCreateRequest(String username, /* ... */) {
-        this.username = username;
-        /* ... */
-    }
-
-    public String getUsername() { return this.username; }
-    public String getPassword() { return this.password; }
-    /* ... */
-    public void setUsername(String username) { this.username = username; }
-    public void setPassword(String password) { this.password = password; }
-    /* ... */
-}
-
-public class Client {
-    /* ... */
-    public void sendRequest() {
-        var request = new UserCreateRequest("testuser", /* ... */);
-        var serializer = new Serializer();
-        serializer.addStringField("username", request.getUsername());
-        /* ... */
-        var body = serializer.makeBody();
-        /* ... */
-    }
-    /* ... */
-}
-```
-
-This is clearly a straw man, getters and setters in this case are easily avoidable.
-Using simple OO design patterns you can avoid this, for example by asking the object to serialize itself, and by using the Builder design pattern.
-
-```java
-class UserCreateRequest {
-    private String username;
-    private String password;
-    private String email;
-    private int age;
-    private float height;
-
-    public UserCreateRequest(String username, /* ... */) {
-        this.username = username;
-        /* ... */
-    }
-
-    public Body serializeIntoBody() {
-        var serializer = new Serializer();
-        serializer.addStringField("username", username);
-        serializer.addStringField("password", password);
-        /* ... */
-        return serializer.makeBody();
-    }
-
-    public void setUsername(String username) { this.username = username; }
-    public void setPassword(String password) { this.password = password; }
-    /* ... */
-}
-
-public class Client {
-    /* ... */
-    public void sendRequest() {
-        var request = new UserCreateRequest("testuser", "1234", "test@mail.com", 32, 180);
-        var body = request.serializeIntoBody();
-        /* ... */
-    }
-    /* ... */
-}
-```
 
 ### Many parameters
 
@@ -264,20 +163,19 @@ Typescript has both classes and strongly typed objects.<sup>[9][10]</sup>
 
 While the language facilities are in place in many languages, they are often neither intuitive nor 
 
-## Language design proposal NOT DONE
+## Language design proposal
 
-## Sources
-
-1. https://en.wikipedia.org/wiki/Record_(computer_science)
-2. https://en.wikipedia.org/wiki/Passive_data_structure
-3. https://en.wikipedia.org/wiki/Class_(computer_programming)
-4. https://en.wikipedia.org/wiki/Object-oriented_programming
-5. https://en.wikipedia.org/wiki/Data_transfer_object
-6. https://docs.oracle.com/en/java/javase/14/language/records.html
-7. https://en.cppreference.com/w/cpp/language/class
-8. https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/value-types
-9. https://www.typescriptlang.org/docs/handbook/2/objects.html
-10. https://www.typescriptlang.org/docs/handbook/2/classes.html
-11. https://www.infoworld.com/article/2073723/why-getter-and-setter-methods-are-evil.html
-12. https://wiki.c2.com/?AccessorsAreEvil
+[1]: https://en.wikipedia.org/wiki/Record_(computer_science)
+[2]: https://en.wikipedia.org/wiki/Passive_data_structure
+[3]: https://en.wikipedia.org/wiki/Class_(computer_programming)
+[4]: https://en.wikipedia.org/wiki/Object-oriented_programming
+[5]: https://en.wikipedia.org/wiki/Data_transfer_object
+[6]: https://docs.oracle.com/en/java/javase/14/language/records.html
+[7]: https://en.cppreference.com/w/cpp/language/class
+[8]: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/value-types
+[9]: https://www.typescriptlang.org/docs/handbook/2/objects.html
+[10]: https://www.typescriptlang.org/docs/handbook/2/classes.html
+[11]: https://www.infoworld.com/article/2073723/why-getter-and-setter-methods-are-evil.html
+[12]: https://wiki.c2.com/?AccessorsAreEvil
+[13]: https://en.wikipedia.org/wiki/SOLID
 
