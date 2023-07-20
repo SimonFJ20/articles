@@ -3,6 +3,17 @@
 
 _Simon F. Jakobsen_
 
+## Abstract
+
+In modern programming, the term "class" has multiple meanings, and is often confused with the concept of a struct.
+In many programming languages, such as Java, there are no language level distinctions between concept of structs and the concept of classes.
+As the class construct is taught to be used only in the way OOP dictates them to be,
+it often leads to cases where class constructs are applied disadvantageous.
+This is most often the case for beginners who aren't skilled in tackling edge cases using design patterns and discipline.
+In this article I will try to argue for the distinctness of classes and structs,
+I'll then propose some language features tackling these issues in an imaginary languages,
+and compare them to modern languages.
+
 ## Terminology
 
 ### Struct
@@ -116,6 +127,7 @@ terry.passwordHash = "foo".toHash();
 ```
 
 Ultimately, when using a class, we care about the behaviour.
+
 
 ## Sources
 
