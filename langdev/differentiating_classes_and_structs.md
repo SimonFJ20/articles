@@ -127,7 +127,7 @@ terry.changePassword("1234", "abcd");
 terry.passwordHash = "foo".toHash();
 ```
 
-_Elaboration disired on OOP strictness_.
+In order to write code adhearing to object oriented design, you have to follow a set of principles.
 
 Ultimately, when using a class, we care about the behaviour.
 
@@ -162,7 +162,8 @@ void send_request(Client* client) {
         /* ... */
     };
     Serializer* serializer = serializer_new();
-    serializer.add_string_field("username", request.username);
+    serializer_add_string_field(serializer, "username", request.username);
+    serializer_add_string_field(serializer, "password", request.password);
     /* ... */
     Buffer* body = serializer_make_body(serializer);
     /* ... */
@@ -170,7 +171,7 @@ void send_request(Client* client) {
 ```
 
 Notice there aren't anything unnecessary in the struct definition.
-But this way of doing it, is not very object oriented.
+The way this code is written, would be described as procedural, and not very object oriented.
 Now with the same example in Java, adhearing to encapsulation rules.
 
 ```java
@@ -187,7 +188,10 @@ class UserCreateRequest {
     }
 
     public String getUsername() { return this.username; }
+    public String getPassword() { return this.password; }
+    /* ... */
     public void setUsername(String username) { this.username = username; }
+    public void setPassword(String password) { this.password = password; }
     /* ... */
 }
 
@@ -205,7 +209,8 @@ public class Client {
 }
 ```
 
-This is clearly a straw man, using simple OO design patterns you can avoid this, for example by asking the object to serialize itself, and by using the Builder design pattern.
+This is clearly a straw man, getters and setters in this case are easily avoidable.
+Using simple OO design patterns you can avoid this, for example by asking the object to serialize itself, and by using the Builder design pattern.
 
 ```java
 class UserCreateRequest {
@@ -222,28 +227,33 @@ class UserCreateRequest {
 
     public Body serializeIntoBody() {
         var serializer = new Serializer();
-        serializer.addStringField("username", request.getUsername());
+        serializer.addStringField("username", username);
+        serializer.addStringField("password", password);
+        /* ... */
         return serializer.makeBody();
     }
+
+    public void setUsername(String username) { this.username = username; }
+    public void setPassword(String password) { this.password = password; }
+    /* ... */
 }
 
 public class Client {
     /* ... */
     public void sendRequest() {
-        var request = new UserCreateRequest("testuser", /* ... */);
-        var serializer = new Serializer();
-        serializer.addStringField("username", request.getUsername());
-        /* ... */
-        var body = serializer.makeBody();
+        var request = new UserCreateRequest("testuser", "1234", "test@mail.com", 32, 180);
+        var body = request.serializeIntoBody();
         /* ... */
     }
     /* ... */
 }
 ```
 
-Now
-
 ### Many parameters
+
+```
+class 
+```
 
 ## Status quo
 
