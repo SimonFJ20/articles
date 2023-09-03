@@ -1,4 +1,4 @@
-![image](https://github.com/SimonFJ20/articles/assets/28040410/80f746d0-f229-4949-8ccf-0e31d2565d56)
+
 # Array based language
 
 **A small programming language, based on arrays, inspired by Typescript's type system.**
