@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title></title>
+<meta name="generator" content="md2html">
+</head>
+<body>
+<h1>Differentiating classes and structs</h1>
+<p><em>Simon F. Jakobsen</em></p>
+<h2>Abstract</h2>
+<p>In modern programming, the term &quot;class&quot; has multiple meanings, and is often confused with the concept of a struct.
+In many programming languages, such as Java, there are little to none language level distinctions between concept of structs and the concept of classes.
+As the class construct is taught to be used only in the way OOP dictates them to be,
+it often leads to cases where class constructs are applied disadvantageous.
+This is most often the case for beginners who aren't skilled in tackling edge cases using design patterns and discipline.
+In this article I will try to argue for the distinctness of classes and structs,
+I'll then propose some language features tackling these issues in an imaginary languages,
+and compare them to modern languages.</p>
+<h2>Terminology</h2>
+<h3>Struct</h3>
+<p>In computer science, a struct (also called a structure, records, compound data) is a language concept and construct used to describe a piece of data consisting of multiple values.<sup>[1]</sup>
+Structs consists of a list of field specifiers, and a name of the struct.
+A field specifier specifies the name and data type fields (also called data fields, members, data members, attributes, properties, rows, instance variables) of the struct instances.
+Some languages also support methods (also called associated methods, member functions), which provide ways of manipulating and retrieving the data of struct instances.</p>
+<p>Some languages provide functionality to specify mutability of the struct, its fields or of struct instances.
+Mutability meaning the ability to change the value of fields post initialization, implying that all fields are initialized at some point during instanciation.
+Most often either complete mutability or complete immutability is desired, as opposed to varying mutability throughout the fields.</p>
+<p>Some languages support access modifiers as a facility to hide certain fields from the consumer, these fields are only available through methods.
+Although this is a feature in many languages, anything else than completely transparent visibility is often undesired, as we usually care about the underlying data.</p>
+<p>A common design pattern supported by the struct construct is the Data Transfor Object (DTO) pattern.
+Structs also support being used as passive data structures.<sup>[2]</sup></p>
+<p>An example of the struct concept is the <code>struct</code> construct in C.</p>
+<pre><code class="language-c">// define a struct with the name 'Car'
+struct Car {
+    // define a field 'top_speed' with the type 'float'
+    float top_speed;
+    int passenger_capacity;
+};
+
+// declare and instantiate a struct instance called 'sedan' of the struct 'Car'
+struct Car sedan;
+// afterwards, define the value of the fields
+sedan.top_speed = 200.0;
+sedan.passenger_capacity = 5;
+
+// initialize a struct instance 'sports_car'
+struct Car sports_car = {
+    .top_speed = 300.0,
+    .passenger_capacity = 2,
+};
+
+// use struct values
+if (sedan.top_speed &lt; sports_car.top_speed) { /* ... */ }
+</code></pre>
+<p>C doesn't strongly support member functions, visibility modifiers or mutability specifiers on individual fields, but does support specifying mutability on entire struct instances.</p>
+<pre><code class="language-c">// instantiate a non-const, ie. mutable instance
+Car suv = {
+    .top_speed = 170,
+    .passenger_capacity = 5,
+};
+
+// instantiate a const, ie immutable instance
+const Car minivan = {
+    .top_speed = 160,
+    .passenger_capacity = 7,
+};
+
+suv.top_speed = 180; // allowed, since 'suv' is non-const/mutable
+minivan.top_speed = 150; // error, not allowed, since 'minivan' is const/immutable
+</code></pre>
+<p>The goal of a struct can trivially be achieved by the use of multiple variables defined seperately, the struct construct just provides an easy to read, less error prone, clear and concise way of grouping data together.</p>
+<p>Ultimately, when using a struct, we care about the data.</p>
+<h3>Class</h3>
+<p>In OOP, a class is a concept used to describe objects (also called entities) in  an object model representing a problem space.<sup>[citation desired]</sup>
+In OOP, an object is a 'thing' with some associated behaviour. Associated behaviour is often achieved using methods (also called associated methods, member functions).
+An object may contain specific data, but objects are opaque, meaning the consumer may not access the data directly, but have to rely on methods, which are in turn allowed to access the internal data.</p>
+<p>In many class-based languages (most often called OO-languages, although I dislike the term) the class concept is conveyed using a <code>class</code> construct.
+Generalized, the class construct consists of a name of the class, and a list of fields (also called data fields, members, data members, attributes, properties, rows, instance variables) as though it was a struct.
+The list also contains methods.
+Most often access modifiers can be used on both fields and methods to make them public, private and others, ie. accessible or inaccesible to the consumer.</p>
+<p>An example of the class concept is the <code>class</code> construct in Java.</p>
+<pre><code class="language-java">// define a class with the name 'User'
+class User {
+    // define private field 'username' with type 'String'
+    private String username;
+    private Hash passwordHash;
+
+    // define constructor that initialized a class instance
+    // using the specified parameters 'username' and 'password'
+    public User(String username, String password) {
+        this.username = username;
+        this.passwordHash = password.toHash();
+    }
+
+    // define a some behaviour, ie. public method, with access to the internal fields
+    public void changePassword(String oldPassword, String newPassword) throws AuthException {
+        if (!passwordHash.isEqualTo(oldPassword.toHash()))
+            throw WrongPasswordException();
+        this.passwordHash = newPassword.toHash();
+    }
+}
+
+// initialize an instance of 'User'
+User terry = new User(&quot;terry&quot;, &quot;1234&quot;);
+
+// use public behaviour specified in the class definition
+terry.changePassword(&quot;1234&quot;, &quot;abcd&quot;);
+
+// error, not allowed, since 'passwordHash' is marked 'private' inside the class definition
+terry.passwordHash = &quot;foo&quot;.toHash();
+</code></pre>
+<p>In order to write code adhearing to object oriented design, you have to follow a set of principles.</p>
+<p>Ultimately, when using a class, we care about the behaviour.</p>
+<h2>Problem</h2>
+<p>There are cases where OOP constrained classes aren't suited the problem.
+In these cases using the class constructs in these languages, the way OO is taught, ie. encapsulation, ie. private fields, accessible through methods,
+often leads to larger amounts of code than neccessary.
+This also often leads to heaps of getters and setters, which is seen as a code smell.<sup>[11][12]</sup></p>
+<h3>PODs</h3>
+<p>When using inter process communucation, you often have to send and recieve composite data types.
+These composite data types have to be serialized and deserialized as part of the communications process.
+The construction and extraction process of these composite data types can be verbose,
+if done using classes.</p>
+<p>An example of PODs using structs in C could be something like this</p>
+<pre><code class="language-c">struct UserCreateRequest {
+    char* username;
+    char* password;
+    char* email;
+    int age;
+    float height;
+};
+
+void send_request(Client* client) {
+    const struct UserCreateRequest request = {
+        .username = &quot;testuser&quot;,
+        /* ... */
+    };
+    Serializer* serializer = serializer_new();
+    serializer_add_string_field(serializer, &quot;username&quot;, request.username);
+    serializer_add_string_field(serializer, &quot;password&quot;, request.password);
+    /* ... */
+    Buffer* body = serializer_make_body(serializer);
+    /* ... */
+}
+</code></pre>
+<p>Notice there aren't anything unnecessary in the struct definition.
+The way this code is written, would be described as procedural, and not very object oriented.
+Now with the same example in Java, adhearing to encapsulation rules.</p>
+<pre><code class="language-java">class UserCreateRequest {
+    private String username;
+    private String password;
+    private String email;
+    private int age;
+    private float height;
+
+    public UserCreateRequest(String username, /* ... */) {
+        this.username = username;
+        /* ... */
+    }
+
+    public String getUsername() { return this.username; }
+    public String getPassword() { return this.password; }
+    /* ... */
+    public void setUsername(String username) { this.username = username; }
+    public void setPassword(String password) { this.password = password; }
+    /* ... */
+}
+
+public class Client {
+    /* ... */
+    public void sendRequest() {
+        var request = new UserCreateRequest(&quot;testuser&quot;, /* ... */);
+        var serializer = new Serializer();
+        serializer.addStringField(&quot;username&quot;, request.getUsername());
+        /* ... */
+        var body = serializer.makeBody();
+        /* ... */
+    }
+    /* ... */
+}
+</code></pre>
+<p>This is clearly a straw man, getters and setters in this case are easily avoidable.
+Using simple OO design patterns you can avoid this, for example by asking the object to serialize itself, and by using the Builder design pattern.</p>
+<pre><code class="language-java">class UserCreateRequest {
+    private String username;
+    private String password;
+    private String email;
+    private int age;
+    private float height;
+
+    public UserCreateRequest(String username, /* ... */) {
+        this.username = username;
+        /* ... */
+    }
+
+    public Body serializeIntoBody() {
+        var serializer = new Serializer();
+        serializer.addStringField(&quot;username&quot;, username);
+        serializer.addStringField(&quot;password&quot;, password);
+        /* ... */
+        return serializer.makeBody();
+    }
+
+    public void setUsername(String username) { this.username = username; }
+    public void setPassword(String password) { this.password = password; }
+    /* ... */
+}
+
+public class Client {
+    /* ... */
+    public void sendRequest() {
+        var request = new UserCreateRequest(&quot;testuser&quot;, &quot;1234&quot;, &quot;test@mail.com&quot;, 32, 180);
+        var body = request.serializeIntoBody();
+        /* ... */
+    }
+    /* ... */
+}
+</code></pre>
+<h3>Many parameters</h3>
+<pre><code>class 
+</code></pre>
+<h2>Status quo</h2>
+<p>This isn't a new idea, many languages already have distinct concepts of classes and structs. Java for example has records.<sup>[6]</sup>
+C++ has both structs and classes, although are basically the same construct, except for the default accessability semantics.<sup>[7]</sup>
+C# has classes, structs and records, these all have different semantics and use cases.<sup>[8]</sup>
+Typescript has both classes and strongly typed objects.<sup>[9][10]</sup></p>
+<p>While the language facilities are in place in many languages, they are often neither intuitive nor</p>
+<h2>Language design proposal NOT DONE</h2>
+<h2>Sources</h2>
+<ol>
+<li>https://en.wikipedia.org/wiki/Record_(computer_science)</li>
+<li>https://en.wikipedia.org/wiki/Passive_data_structure</li>
+<li>https://en.wikipedia.org/wiki/Class_(computer_programming)</li>
+<li>https://en.wikipedia.org/wiki/Object-oriented_programming</li>
+<li>https://en.wikipedia.org/wiki/Data_transfer_object</li>
+<li>https://docs.oracle.com/en/java/javase/14/language/records.html</li>
+<li>https://en.cppreference.com/w/cpp/language/class</li>
+<li>https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/value-types</li>
+<li>https://www.typescriptlang.org/docs/handbook/2/objects.html</li>
+<li>https://www.typescriptlang.org/docs/handbook/2/classes.html</li>
+<li>https://www.infoworld.com/article/2073723/why-getter-and-setter-methods-are-evil.html</li>
+<li>https://wiki.c2.com/?AccessorsAreEvil</li>
+</ol>
+</body>
+</html>
