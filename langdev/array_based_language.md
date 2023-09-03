@@ -1,4 +1,4 @@
-
+![image](https://github.com/SimonFJ20/articles/assets/28040410/80f746d0-f229-4949-8ccf-0e31d2565d56)
 # Array based language
 
 **A small programming language, based on arrays, inspired by Typescript's type system.**
@@ -11,6 +11,8 @@ Required knowledge:
 As a start to this series of articles, I'd like to show an idea I got for a programming language.
 
 It started with me experiementing with the type system in Typescript.
+
+## Typescript's type system
 
 To make this make sense, I'll have to explain a bit about typescript.
 
@@ -71,8 +73,7 @@ const f: [string, 123] = ["foo", 123];
 const g: [string, 123] = ["", 123];
 const h: [string, 123] = ["foo", 456]; // Type '456' is not assignable to type '123'.
 ```
-Not represented here are the `any`, `unknown`, `never` types, which are handy, but not necessary.
-All types extend `any`, no types extend `unknown` and a values of type `never` can never exist (hence the name).
+Not represented here are the `any`, `void`, `unknown`, `never`, `null`, `undefined` types and object literal types, which are handy, but not necessary.
 The locals (names referring to variable or constant values) `b` and `d` are what Typescript calls literal types.[3]
 Literal types represent a specific value, eg. the `b` has the type `12`, meaning it'll only accept the value `12` specifically, not other numbers like `7`, `-123` or `3.14`; 
 The locals `a` and `c` are what Typescript calls primitive types.[4]
@@ -148,14 +149,296 @@ type A = Contains<5, [1, 2, 3]>; // false
 type B = Contains<"bar", ["foo", "bar", "baz"]>; // true
 ```
 The quick ones among you would already have realised, that Typescript type system is Turing complete as fuck.[10]
+(Except for the recursion depth for type instantiations, which have methods of partial mitigation.[11])
+This is because we conform to the 3 rules of a turing complete programming language, consisting of:
+1. Sequence (we have recursion)
+2. Selection (we have conditional)
+3. Iteration (we have recursion)
 
+Also notice the lack of ability to do anything, meaning no side effects, and the way types definitions are essentially functions, meaning the what we have is a purely functional programming language.
 
+Now with this newly discovered Turing complete purely functional programming language of ours, that being Typescript's type system,
+we could, for example, make a PEMDAS complient calculator, including a full set of signed integer arithmetic operations add/subtract/multiply/divide/remainder/exponentiation, including comparison operators lt/lte/gt/gte/equal/not equal,
+and of course a X86-64 generator for good measures. And this is exactly what I did.[12]
 
-Take a look at the following code.
+![image](https://github.com/SimonFJ20/articles/assets/28040410/baf907d9-f535-4091-b8d2-4e5ccaaf9223)
+![image](https://github.com/SimonFJ20/articles/assets/28040410/34bca835-96b6-4ac3-8618-5c292e7332c5)
+![image](https://github.com/SimonFJ20/articles/assets/28040410/c1f3e2e2-6d7d-4986-9be7-98abeb3dcadb)
+
+## Reflecting on Typescript
+
+From now on I'll refer to Typescript's type system used as a programming language as just TS for simplicity, and use *Typescript* to refer to the original definition. 
+
+### The good
+
+What do I like about Typescript:
+- Simple
+- Ergonomic syntax
+- Composable
+
+#### Simple
+
+```ebnf
+program ::= typeDefinitionStatement*
+typeDefinitionStatement ::= "type" ID paramList?  "=" type
+paramList ::= "<" seperatedList(param, ",") ">"
+param ::= ID ("extends" pattern)?
+
+pattern ::= objectPattern | tuplePattern | spreadPattern | literalType | ID | "infer" ID
+objectPattern ::= uninteresting
+tuplePattern ::= [pattern*]
+spreadPattern ::= "..." pattern
+
+type ::= optionalType | objectType | tupleType | arrayType | spreadType | literalType | ID
+optionalType ::= param "?" type ":" type
+objectType ::= uninteresting 
+tupleType ::= [seperatedList(type, ",")]
+arrayType ::= type[]
+spreadType ::= "..." type
+literalType ::= INT_LITERAL | STRING_LITERAL | "true" | "false" | "null" | "undefined"
+```
+The above is the entire grammar of the parts of Typescript I'm interested in expressed in EBNF.[13][14]
+This evidently represents a very simple language, but we've just seen that just this is Turing complete and, in my opinion, totally usable.
+
+#### Ergonomic syntax
+
+Look at the following code.
 
 ```ts
-type Add<Left extends any[], Right extends any[]> = [...Left, ...Right];
+type A = [any, any, any];
+
+type B<C extends any[]> =
+    C extends [any, any, any]
+        ? true
+        : false
+
+type D<A extends any[], E extends any[]> =
+    B<A> extends true
+        ? [...A, ...E]
+        : E;
+
+type F<A> = ...;
+type MapF<List extends any[], Acc extends any[] = []> =
+    List extends [infer Element, ...infer Rest extends any[]]
+        ? MapF<Rest, [...Acc, F<Element>]>
+        : Acc;
+type Applied = MapF<[2, 3]>; // [F<2>, F<3>];
 ```
+It's trivial to infer that `[any, any, any]` is a container with 3 elements, the elements all being `any` in this case.
+The spread syntax is even simpler to deduce the behavior of.
+I really like the tenary operator, as it's clear and concise.
+
+#### Composable
+
+This is generally a trait of functional programming languages.
+
+### The bad
+
+What do I not like about Typescript:
+- Recursion depth
+- Slow
+- No way of doing side effects
+- The primitve types
+- No higher kinded types
+- The rest of *Typescript*
+
+#### Recursion depth
+
+![image](https://github.com/SimonFJ20/articles/assets/28040410/26fec0ae-5376-4d9e-a25c-d4f981a2116b)
+
+This limits the size of programs.
+There are ways to improve this, but only slightly.[11]
+
+#### Slow
+
+Typescript isn't inherently slow, just the fact that it's evaluated through *Typescript*'s type checker.
+
+Without having done any performance testing myself, I can say from experience, that even simple program using a bit of recursion can take several 10's of seconds to evaluate.
+Compare this to modern day Javascript in the browser and it's abysmally slow.
+
+#### Side effects
+
+Input is typed into the source code, output is retrieved by asking the language server, this isn't particularly practical.
+
+The lack of side effects in general isn't necessarily bad, but the lack of any side effects limits the usecases a lot.
+
+#### Primitive types
+
+This is less of a problem than the others, but I just wanted ackoledge them.
+Promitive types only make sense in the world of values, because 2 literal types extending number don't have any relation to each other, for example, we cannot use the `+`-operator on the 2 types.
+This could either be fixed by adding arithmetic and such to create relations between the subtypes, but this will increase the size of the language a lot, the size implying complexity, opposite of simplicity. 
+
+#### No higher kinded types
+
+*Typescript* does not suppert higher kinded types.[15]
+We could've used as lambda functions, implying polymorphism.
+
+#### The rest of Typescript
+
+Having all the other features of *Typescript* in the languages, undesireable.
+
+## A new language
+
+Wouldn't it be nice to have all the good parts without the bad?
+Yes, it would. Therefore let's make our own language with all the right ideas and none of the bad.
+
+### Spec
+
+#### Expressions
+
+##### Symbol
+
+A symbol is an identifiable literal value.
+
+```rs
+'a
+'123
+'foo_bar
+```
+
+Identifiable meaing two identical symbols are equal, ie. `'a = 'a` and `'a != 'b`.
+
+##### Array
+
+None, one or multiple values in a container.
+
+```rs
+[]
+['a 'b 'c]
+[[] 'a ['a 'b]]
+```
+No comma seperation.
+
+##### Spread
+
+```rs
+..v
+[a b] // [[..] [..]]
+[a ..b] // [[..] ..]
+[..a b] // [.. [..]]
+[..a ..b] // [.. ..]
+```
+
+##### Application/Call
+
+```rs
+(operator arg1 arg2)
+(a)
+(a b)
+```
+
+##### Conditional
+
+```rs
+if a = b
+    ? c
+    : d
+```
+
+`a` is an expression, so are `c` and `d` although they're lazilier evaluated. `b` is a pattern optionally containing bound values.
+
+##### Let
+
+```rs
+let a = 5;
+let b x = [x x];
+
+a // 5
+b // fn x = [x x]
+(b 5) // [5 5]
+```
+
+Uses the `let` keyword.
+
+Notice the `;`. You might think this is the "statement seperator"-operator.
+This is incorrect, and wouldn't make sense in a purely functional world, as all expressions should result in values.
+Instead `;` is this language's way of spelling "in", like the "in" in Haskell's `let _ in _` syntax.
+Meaning it binds it's the expression after the `=`'s value to the identifier in the expression after the `;`;
+But wouldn't that make declarations order dependent like F#? [citation needed]
+Yes, but actualy no, I have a trick up my sleeve:
+There are probably ways to do this while still being pure, therefore order independence is required, but it's implementation defined how to achieve it 😄.
+
+
+##### Lambda
+
+```rs
+let my_lambda = fn a b = (add a b)
+
+(my_lambda (int 2) (int 3))
+```
+
+Uses the `fn` keyword. 
+
+##### Curring
+
+Some some reason i chose to support currying.[16]
+
+```rs
+let map f v = ...;
+
+
+```
+
+#### Grammar
+
+```ebnf
+program ::= expression
+
+expression ::= let | fn | if | spreadExpr | arrayExpr | callExpr | groupExpr | IDENTIFIER | SYMBOL
+
+let ::= "let" IDENTIFIER+ "=" expression ";" expression
+
+fn ::= "fn" IDENTIFIER* "=" expression
+
+if ::= "if" expression "=" pattern "?" expression ":" expression
+
+spreadExpr ::= ..expression
+
+arrayExpr ::= [expression*]
+
+callExpr ::= (expression+)
+
+groupExpr ::= (expression)
+
+pattern ::=  bind | spreadPattern | arrayPattern | groupPattern | IDENTIFIER | SYMBOL
+
+bind ::= "@" IDENTIFIER ("=" pattern)?
+
+spreadPattern ::= ..pattern
+
+arrayPattern ::= [pattern*]
+
+groupPattern ::= (pattern)
+
+SYMBOL ::= /('[a-zA-Z0-9_]+)|([0-9]+)/
+IDENTIFIER ::= /[a-zA-Z0-9_]+/
+```
+
+This is a less than strict EBNF grammar describing the language.
+
+### Arithmetic
+
+```rs
+let int_symbol_to_array v = /* builtin maybe (N -> [..'a * N]) */;
+let sign v = ['positive v];
+let int v = (sign (int_symbol_to_array v))
+
+let uadd a b = [..a ..b];
+
+let usub a b =
+    if b = [_ ..@b_rest]
+        ? if a = [_ ..@a_rest]
+            ? (usub a_rest b_rest)
+            : 'never
+        : a;
+
+let add a b =
+    if [a b] extends [['positive @a] ['positive @b]]
+        ? ['positive (uadd a b)]
+    : if [a b] extends [['positive @a] ['negate @b]]
+        ? ['positive (uadd a b)]
+```
+
 
 [1]: https://www.typescriptlang.org/docs/handbook/2/generics.html
 [2]: https://www.typescriptlang.org/docs/handbook/2/narrowing.html
@@ -167,6 +450,12 @@ type Add<Left extends any[], Right extends any[]> = [...Left, ...Right];
 [8]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax#spread_in_array_literals
 [9]: https://www.typescriptlang.org/docs/handbook/2/conditional-types.html
 [10]: https://github.com/microsoft/TypeScript/issues/14833
+[11]: /techniques/improve_typescript_type_recursion_depth.md
+[12]: https://gist.github.com/SimonFJ20/1bbfd17c323acb78ad46fef2af12d968
+[13]: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form
+[14]: https://stackoverflow.com/questions/12720955/is-there-a-formal-ideally-bnf-typescript-js-language-grammar-or-only-typescri
+[15]: https://github.com/microsoft/TypeScript/issues/1213
+[16]: https://en.wikipedia.org/wiki/Currying
 
 
 
