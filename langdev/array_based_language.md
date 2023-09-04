@@ -5,7 +5,7 @@
 
 *Simon F. Jakobsen*
 
-As a start to this series of articles, I'd like to show an idea I got for a programming language.
+I'd like to show an idea I got for a programming language.
 
 It started with me experimenting with the type system in Typescript.
 
@@ -13,49 +13,20 @@ It started with me experimenting with the type system in Typescript.
 
 To make this make sense, I'll have to explain a bit about typescript.
 
-This is Javascript, we all know and hate it.
-```js
-let myVar = 123;
-
-function foo(bar) {
-    return bar + "baz";
-}
-```
-And as you'd probably expect, Typescript is the same, but with types.
-```ts
-let myVar: number = 123;
-
-function foo(bar: string): string {
-    return bar + "baz";
-}
-
-// we'll use 'const' rather than 'let' from here on out
-// apart from assignabiliy, they are semantically identical
-const myVar: number = 123;
-
-// we'll also use arrow notation for functions
-// the 2 function definitions are identical apart from syntax
-const foo = (bar: string): string => bar + "baz";
-```
+Typescript has a type system (WOW :exploding_head:!).
 Typescript's type system contains some quite advanced features.
 One such feature is it's generic type parameters (called "generics").[1]
 ```ts
 const foo = <T>(bar: T): T => bar;
 
-const a: number = 123;
-const b: number = foo<number>(a);
-
-const c = "baz";
-const d = foo(c);
+foo<number>(123); // T = number
+foo("foo"); // T = string
 ```
 These generics can be constrained, such that we only allow a specific subset of types.
 Typescript calls this narrowing.[2]
 ```ts
-const unconstrained = <T>(a: T): T => a;
 const constrained = <T extends number>(a: T): T => a;
 
-const a = unconstrained(123);
-const b = unconstrained("abc");
 const c = constrained(123);
 const d = constrained("abc"); // Argument of type 'string' is not assignable to parameter of type 'number'.
 ```
@@ -63,34 +34,27 @@ Another feature, is the variety of primitive types in Typescript.
 ```ts
 const a: number = 123;
 const b: 12 = 12;
-const c: string = "abc"
-const d: "foo" = "bar"; // Type '"bar"' is not assignable to type '"foo"'.
-const e: number[] = [1, 2, 3];
-const f: [string, 123] = ["foo", 123];
-const g: [string, 123] = ["", 123];
-const h: [string, 123] = ["foo", 456]; // Type '456' is not assignable to type '123'.
+
+const c: number[] = [1, 2, 3];
+const d: [string, 123] = ["foo", 123];
 ```
 Not represented here are the `any`, `void`, `unknown`, `never`, `null`, `undefined` types and object literal types, which are handy, but not necessary.
-The locals (names referring to variable or constant values) `b` and `d` are what Typescript calls literal types.[3]
+The local (name referring to variable or constant value) `b` is what Typescript calls literal types.[3]
 Literal types represent a specific value, eg. the `b` has the type `12`, meaning it'll only accept the value `12` specifically, not other numbers like `7`, `-123` or `3.14`; 
-The locals `a` and `c` are what Typescript calls primitive types.[4]
+The local `a` is what Typescript calls primitive types.[4]
 Primitives types are the set of all literal types of a class of values. For example, the type `number` is a type of the set of all numbers, meaning the local `a` can accept all number values such as `7`, `-123` or `3.14`.
-The local `e` has an array type, which is what you'd expect.[5]
-the local `f` has what Typescript calls Tuple Types.[6]
+The local `c` has an array type, which is what you'd expect.[5]
+the local `d` has what Typescript calls Tuple Types.[6]
 
 Now these tuple types are quite interesting, as Typescript lets us do array operations on them.
 To see what I mean, lets first look at array operations on array values.[8]
 ```ts
-type A = number[];
-
-const a: A = [1, 2, 3];
-const b: A = [...a, 4]; // [1, 2, 3, 4]
-const c: A = [5, 6, 7];
-const d: A = [...a, ...c]; // [1, 2, 3, 4, 5, 6]
+const a = [1, 2, 3];
+const b = [...a, 4]; // [1, 2, 3, 4]
+const c = [5, 6, 7];
+const d = [...a, ...c]; // [1, 2, 3, 4, 5, 6]
 ```
 Here we see a value being appended to an array, and arrays being contatonated into a new array containing the elements of both.
-
-The type statement defining `A`, makes `A` a type alias for `number[]`.[7]
 
 Now with tuple types, we can do the same on types.
 ```ts
@@ -402,12 +366,12 @@ SYMBOL ::= /('[a-zA-Z0-9_]+)|([0-9]+)/
 IDENTIFIER ::= /[a-zA-Z0-9_]+/
 ```
 
-This is a less than strict EBNF grammar describing the language.
+This is a EBNF grammar describing the language.
 
 ### Arithmetic
 
 ```rs
-let int_symbol_to_array v = /* builtin maybe (N -> [..'a * N]) */;
+let int_symbol_to_array v = /* builtin maybe, (N -> [..'a * N]) */;
 let sign v = ['positive v];
 let int v = (sign (int_symbol_to_array v))
 
@@ -427,6 +391,9 @@ let add a b =
         ? ['positive (uadd a b)]
 ```
 
+## Implementation
+
+I'm working on a quite naive interpreter written in Typescript.
 
 [1]: https://www.typescriptlang.org/docs/handbook/2/generics.html
 [2]: https://www.typescriptlang.org/docs/handbook/2/narrowing.html
@@ -434,7 +401,7 @@ let add a b =
 [4]: https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#the-primitives-string-number-and-boolean
 [5]: https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#arrays
 [6]: https://www.typescriptlang.org/docs/handbook/2/objects.html#tuple-types
-[7]: https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-aliases
+<!-- [7]: https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-aliases -->
 [8]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax#spread_in_array_literals
 [9]: https://www.typescriptlang.org/docs/handbook/2/conditional-types.html
 [10]: https://github.com/microsoft/TypeScript/issues/14833
