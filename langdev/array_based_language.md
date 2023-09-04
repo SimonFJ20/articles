@@ -3,14 +3,11 @@
 
 **A small programming language, based on arrays, inspired by Typescript's type system.**
 
-Required knowledge:
-- Programming
-- A little bit of Typescript.
-- A little bit of functional programmaing. Mostly just the fundamentals of recursion.
+*Simon F. Jakobsen*
 
 As a start to this series of articles, I'd like to show an idea I got for a programming language.
 
-It started with me experiementing with the type system in Typescript.
+It started with me experimenting with the type system in Typescript.
 
 ## Typescript's type system
 
@@ -350,15 +347,6 @@ b // fn x = [x x]
 
 Uses the `let` keyword.
 
-Notice the `;`. You might think this is the "statement seperator"-operator.
-This is incorrect, and wouldn't make sense in a purely functional world, as all expressions should result in values.
-Instead `;` is this language's way of spelling "in", like the "in" in Haskell's `let _ in _` syntax.
-Meaning it binds it's the expression after the `=`'s value to the identifier in the expression after the `;`;
-But wouldn't that make declarations order dependent like F#? [citation needed]
-Yes, but actualy no, I have a trick up my sleeve:
-There are probably ways to do this while still being pure, therefore order independence is required, but it's implementation defined how to achieve it 😄.
-
-
 ##### Lambda
 
 ```rs
@@ -376,7 +364,7 @@ Some some reason i chose to support currying.[16]
 ```rs
 let map f v = ...;
 
-
+let a v = (add v (int 2))
 ```
 
 #### Grammar
