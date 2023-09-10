@@ -135,6 +135,7 @@ From now on I'll refer to Typescript's type system used as a programming languag
 What do I like about Typescript:
 - Simple
 - Ergonomic syntax
+- Small programs
 - Composable
 
 #### Simple
@@ -189,54 +190,64 @@ It's trivial to infer that `[any, any, any]` is a container with 3 elements, the
 The spread syntax is even simpler to deduce the behavior of.
 I really like the tenary operator, as it's clear and concise.
 
+#### Small programs
+
+This is mostly anecdotal, as I haven't done much formal research on it.
+But in my experience, programs written in this functional style tend to be a lot shorter,
+than their imperitive equivalent.
+
 #### Composable
 
+Everything is either a value or a function.
+There isn't a seperation between statements and expressions.
+All subexpressions in an expression can be extracted out into it's own function.
 This is generally a trait of functional programming languages.
 
 ### The bad
 
 What do I not like about Typescript:
-- Recursion depth
-- Slow
+- The implementation
 - No way of doing side effects
-- The primitve types
 - No higher kinded types
 - The rest of *Typescript*
 
-#### Recursion depth
-
-![image](https://github.com/SimonFJ20/articles/assets/28040410/26fec0ae-5376-4d9e-a25c-d4f981a2116b)
-
-This limits the size of programs.
-There are ways to improve this, but only slightly.[11]
-
-#### Slow
+#### The implementation
 
 Typescript isn't inherently slow, just the fact that it's evaluated through *Typescript*'s type checker.
 
 Without having done any performance testing myself, I can say from experience, that even simple program using a bit of recursion can take several 10's of seconds to evaluate.
 Compare this to modern day Javascript in the browser and it's abysmally slow.
 
+There's also the problem of recursion depth.
+
+![image](https://github.com/SimonFJ20/articles/assets/28040410/26fec0ae-5376-4d9e-a25c-d4f981a2116b)
+
+This limits the size of programs.
+There are ways to improve this, but only slightly.[11]
+
 #### Side effects
 
 Input is typed into the source code, output is retrieved by asking the language server, this isn't particularly practical.
 
 The lack of side effects in general isn't necessarily bad, but the lack of any side effects limits the usecases a lot.
-
-#### Primitive types
-
-This is less of a problem than the others, but I just wanted ackoledge them.
-Promitive types only make sense in the world of values, because 2 literal types extending number don't have any relation to each other, for example, we cannot use the `+`-operator on the 2 types.
-This could either be fixed by adding arithmetic and such to create relations between the subtypes, but this will increase the size of the language a lot, the size implying complexity, opposite of simplicity. 
+For example, there are no way to
+- read a file
+- write to a file
+- host a web server
+- send a web request
+- print to the console
+- get input from the console
+- interact with a database
 
 #### No higher kinded types
 
 *Typescript* does not suppert higher kinded types.[15]
-We could've used as lambda functions, implying polymorphism.
+We could've used them as lambda functions, implying polymorphism.
+But in my experience, i haven't found the lack of parametric polymorphism to be crippling. It's just a nice to have.
 
 #### The rest of Typescript
 
-Having all the other features of *Typescript* in the languages, undesireable.
+Having all the other features of *Typescript* in the languages, is obviously undesireable.
 
 ## A new language
 
@@ -244,6 +255,8 @@ Wouldn't it be nice to have all the good parts without the bad?
 Yes, it would. Therefore let's make our own language with all the right ideas and none of the bad.
 
 ### Spec
+
+This isn't a complete specification, just a slightly technical description of the language.
 
 #### Expressions
 
@@ -269,6 +282,30 @@ None, one or multiple values in a container.
 [[] 'a ['a 'b]]
 ```
 No comma seperation.
+
+##### Integer literal
+
+Integers are syntactic suger for arrays of a specific length.
+
+```rs
+5 // is equivalent to [_ _ _ _ _]
+```
+
+##### Character literal
+
+Characters are syntactic suger for integers with the ascii/unicode representation.
+
+```rs
+'a' // is equivalent to 96
+```
+
+##### String literal
+
+Strings are syntactic suger for arrays with characters represented as integers.
+
+```rs
+"hello" // is equivalent to ['h' 'e' 'l' 'l' 'o']
+```
 
 ##### Spread
 
@@ -316,7 +353,7 @@ Uses the `let` keyword.
 ```rs
 let my_lambda = fn a b = (add a b)
 
-(my_lambda (int 2) (int 3))
+(my_lambda 2 3)
 ```
 
 Uses the `fn` keyword. 
@@ -326,9 +363,10 @@ Uses the `fn` keyword.
 Some some reason i chose to support currying.[16]
 
 ```rs
-let map f v = ...;
+let a v = (add v 2)
 
-let a v = (add v (int 2))
+(a 5) // 7
+(a 3) // 5
 ```
 
 #### Grammar
@@ -336,7 +374,7 @@ let a v = (add v (int 2))
 ```ebnf
 program ::= expression
 
-expression ::= let | fn | if | spreadExpr | arrayExpr | callExpr | groupExpr | IDENTIFIER | SYMBOL
+expression ::= let | fn | if | spreadExpr | arrayExpr | callExpr | groupExpr | IDENTIFIER | SYMBOL | INTEGER
 
 let ::= "let" IDENTIFIER+ "=" expression ";" expression
 
@@ -352,7 +390,7 @@ callExpr ::= (expression+)
 
 groupExpr ::= (expression)
 
-pattern ::=  bind | spreadPattern | arrayPattern | groupPattern | IDENTIFIER | SYMBOL
+pattern ::=  bind | spreadPattern | arrayPattern | groupPattern | IDENTIFIER | SYMBOL | INTEGER
 
 bind ::= "@" IDENTIFIER ("=" pattern)?
 
@@ -363,32 +401,77 @@ arrayPattern ::= [pattern*]
 groupPattern ::= (pattern)
 
 SYMBOL ::= /('[a-zA-Z0-9_]+)|([0-9]+)/
-IDENTIFIER ::= /[a-zA-Z0-9_]+/
+IDENTIFIER ::= /[a-zA-Z_][a-zA-Z0-9_]*/
+INTEGER ::= /[0-9]+/
 ```
 
-This is a EBNF grammar describing the language.
+This is an EBNF grammar describing the language.
+All whitespace is ignored, except for it's delimiting capabilities, eg. `a b` and `ab` mean different things.
 
-### Arithmetic
+### Example programs
+
+#### Hello world
 
 ```rs
-let int_symbol_to_array v = /* builtin maybe, (N -> [..'a * N]) */;
-let sign v = ['positive v];
-let int v = (sign (int_symbol_to_array v))
+"Hello, world!"
+```
 
-let uadd a b = [..a ..b];
+#### FizzBuzz
 
-let usub a b =
-    if b = [_ ..@b_rest]
-        ? if a = [_ ..@a_rest]
-            ? (usub a_rest b_rest)
-            : 'never
-        : a;
+```rs
+let fizzbuzz n =
+    if (mod n 15) = 'true
+        ? "fizzbuzz"
+    : if (mod n 3) = 'true
+        ? "fizz"
+    : if (mod n 5) = 'true
+        ? "buzz"
+        : (int_to_string(n));
 
-let add a b =
-    if [a b] extends [['positive @a] ['positive @b]]
-        ? ['positive (uadd a b)]
-    : if [a b] extends [['positive @a] ['negate @b]]
-        ? ['positive (uadd a b)]
+(map fizzbuzz (range 1 100))
+```
+
+#### Calculator
+
+```rs
+let contains v vs =
+    if vs = [@m ..@rest]
+        ? if v = m
+            ? true
+            : (contains v rest)
+        : false;
+
+let tokenize_int text acc =
+    if text = [@char ..@rest]
+        ? if (contains char "0123456789") = 'true
+            ? (tokenize_int rest [..acc char])
+            : [text acc]
+        : [text acc];
+
+let tokenize text acc =
+    if text = [@char ..@rest]
+        ? if (contains char "0123456789") = 'true
+            ? if tokenize_int text [] = [@rest @value]
+                ? (tokenize rest [..acc ['int value]])
+                : 'never
+            : if (contains char "+-*/()") = 'true
+                ? (tokenize rest [..acc ['operator char]])
+                : (tokenize rest [..acc ['invalid char]])
+        : acc;
+
+let parse_group tokens =
+    if tokens = [..@rest]
+        ? if (parse tokens) = [@expr ..@rest]
+            ? 
+        : ['error "expected expression"]
+
+
+let parse_operand tokens =
+    if tokens = [['int value] ..@rest]
+        ? ['int value]
+        : if tokens = [['operator '('] ..@rest]
+            ? (parse_group rest)
+            : ['error "expected operand"]
 ```
 
 ## Implementation
