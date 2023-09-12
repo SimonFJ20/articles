@@ -15,7 +15,7 @@ To make this make sense, I'll have to explain a bit about typescript.
 
 Typescript has a type system (WOW :exploding_head:!).
 Typescript's type system contains some quite advanced features.
-One such feature is it's generic type parameters (called "generics").[1]
+One such feature is its generic type parameters (called "generics").[1]
 ```ts
 const foo = <T>(bar: T): T => bar;
 
@@ -47,14 +47,14 @@ The local `c` has an array type, which is what you'd expect.[5]
 the local `d` has what Typescript calls Tuple Types.[6]
 
 Now these tuple types are quite interesting, as Typescript lets us do array operations on them.
-To see what I mean, lets first look at array operations on array values.[8]
+To see what I mean, let's first look at array operations on array values.[8]
 ```ts
 const a = [1, 2, 3];
 const b = [...a, 4]; // [1, 2, 3, 4]
 const c = [5, 6, 7];
 const d = [...a, ...c]; // [1, 2, 3, 4, 5, 6]
 ```
-Here we see a value being appended to an array, and arrays being contatonated into a new array containing the elements of both.
+Here we see a value being appended to an array, and arrays being concatonated into a new array containing the elements of both.
 
 Now with tuple types, we can do the same on types.
 ```ts
@@ -64,12 +64,12 @@ type C = [...A, ...B]; // [any, any, any, any, any]
 ```
 Now these types, we retrieve using generics too.
 ```ts
-type C<A extends any[], B exends any[]> = [...A, ...b];
+type C<A extends any[], B extends any[]> = [...A, ...b];
 ```
-Now what if we represent integers N in terms of arrays with a of length N.
+Now, what if we represent integers N, in terms of arrays, with a length of N.
 And what if we rename `C` to `Add`.
 ```ts
-type Add<Left extends any[], Right exends any[]> = [...Left, ...Right];
+type Add<Left extends any[], Right extends any[]> = [...Left, ...Right];
 
 type A = [any, any, any]; // 3
 type B = [any, any]; // 2
@@ -119,7 +119,7 @@ This is because we conform to the 3 rules of a turing complete programming langu
 Also notice the lack of ability to do anything, meaning no side effects, and the way types definitions are essentially functions, meaning the what we have is a purely functional programming language.
 
 Now with this newly discovered Turing complete purely functional programming language of ours, that being Typescript's type system,
-we could, for example, make a PEMDAS complient calculator, including a full set of signed integer arithmetic operations add/subtract/multiply/divide/remainder/exponentiation, including comparison operators lt/lte/gt/gte/equal/not equal,
+we could, for example, make a PEMDAS compliant calculator, including a full set of signed integer arithmetic operations add/subtract/multiply/divide/remainder/exponentiation, including comparison operators lt/lte/gt/gte/equal/not equal,
 and of course a X86-64 generator for good measures. And this is exactly what I did.[12]
 
 ![image](https://github.com/SimonFJ20/articles/assets/28040410/baf907d9-f535-4091-b8d2-4e5ccaaf9223)
@@ -834,7 +834,9 @@ if [_] extends [_ ..@rest] ? (mul_internal rest [_ _ _ _] [..[_ _ _ _ _ _ _ _] .
 if [] extends [_ ..@rest] ? (mul_internal rest [_ _ _ _] [..[_ _ _ _ _ _ _ _ _ _ _ _] ..[_ _ _ _]]) : [_ _ _ _ _ _ _ _ _ _ _ _]
 [_ _ _ _ _ _ _ _ _ _ _ _]
 ```
-As evident, a multiply operation done this way, is in fact, not very efficient. Even with optimizations such as add the lengths of multiple spread arrays with insignificant elements.
+As evident, a multiply operation done this way, is in fact, not very efficient.
+Even with a few simple optimizations, this is still painfully slow, compared to a builtin function doing the same.
+Especially with the same optimizations enabled.
 
 ## Implementation
 
