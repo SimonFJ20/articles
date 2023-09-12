@@ -128,7 +128,7 @@ and of course a X86-64 generator for good measures. [And this is exactly what I 
 
 ## Reflecting on Typescript
 
-From now on I'll refer to Typescript's type system used as a programming language as just TS for simplicity, and use *Typescript* to refer to the original definition. 
+In this chaptor, I'll refer to Typescript's type system used as a programming language as just Typescript, and use *Typescript* to refer to the original definition. 
 
 ### The good
 
