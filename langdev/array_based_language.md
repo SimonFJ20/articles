@@ -159,7 +159,7 @@ arrayType ::= type[]
 spreadType ::= "..." type
 literalType ::= INT_LITERAL | STRING_LITERAL | "true" | "false" | "null" | "undefined"
 ```
-The above is the [grammar of the parts of Typescript](https://stackoverflow.com/questions/12720955/is-there-a-formal-ideally-bnf-typescript-js-language-grammar-or-only-typescri) I'm interested in expressed in [EBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form).[14]
+The above is the [grammar of the parts of Typescript](https://stackoverflow.com/questions/12720955/is-there-a-formal-ideally-bnf-typescript-js-language-grammar-or-only-typescri) I'm interested in expressed in [EBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form).
 This evidently represents a very simple language, but we've just seen that just this is Turing complete and, in my opinion, totally usable.
 
 #### Ergonomic syntax
