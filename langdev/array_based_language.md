@@ -369,6 +369,24 @@ let a v = (add v 2)
 (a 3) // 5
 ```
 
+##### Pattern binding
+
+```
+let a v =
+    if v = ['add @left @right]
+        ? (add left right)
+        : 'invalid
+
+(a ['add 5 3]) // 8
+```
+
+```
+let sum values =
+    if values = [@value ..@rest]
+        ? value + (sum rest)
+        : 0 // empty
+```
+
 #### Grammar
 
 ```ebnf
@@ -461,22 +479,156 @@ let tokenize text acc =
 
 let parse_group tokens =
     if tokens = [..@rest]
-        ? if (parse tokens) = [@expr ..@rest]
-            ? 
-        : ['error "expected expression"]
-
+        ? if (parse_expr rest) = [@expr @rest]
+            ? if rest = [['operator ')'] ..@rest]
+                ? [expr rest]
+                : ['error "expected ')'"]
+            : 'never
+        : ['error "expected expression"];
 
 let parse_operand tokens =
     if tokens = [['int value] ..@rest]
-        ? ['int value]
+        ? [['int value] rest]
         : if tokens = [['operator '('] ..@rest]
             ? (parse_group rest)
-            : ['error "expected operand"]
+            : ['error "expected operand"];
+
+let parse_unary tokens =
+    if tokens = [['operator '-'] ..@rest]
+        ? if (parse_unary) = [@expr @rest]
+            ? [['negate expr] rest]
+            : 'never
+        : (parse_operand tokens);
+
+let parse_factor tokens left =
+    if left = 'null
+        ? if (parse_unary tokens) = [@left @rest]
+            ? (parse_factor rest left)
+            : 'never
+        : tokens = [['operator '*'] ..@rest]
+            ? if (parse_unary rest) = [@right @rest]
+                ? (parse_factor rest ['multiply left right])
+                : 'never
+            : tokens = [['operator '/'] ..@rest]
+                ? if (parse_unary rest) = [@right @rest]
+                    ? (parse_factor rest ['divide left right])
+                    : 'never
+                : [left tokens];
+
+let parse_term tokens left =
+    if left = 'null
+        ? if (parse_factor tokens 'null) = [@left @rest]
+            ? (parse_term rest left)
+            : 'never
+        : tokens = [['operator '+'] ..@rest]
+            ? if (parse_factor rest 'null) = [@right @rest]
+                ? (parse_term rest ['add left right])
+                : 'never
+            : tokens = [['operator '-'] ..@rest]
+                ? if (parse_factor rest 'null) = [@right @rest]
+                    ? (parse_term rest ['subtract left right])
+                    : 'never
+                : [left tokens];
+
+let parse_expr tokens = (parse_term token 'null);
+
+let parse tokens =
+    if (parse_expr tokens) = [@expr []]
+        ? expr
+        : 'never;
+
+let evaluate expr =
+    if expr = ['int @value]
+        ? value
+    : if expr = ['negate @inner]
+        ? (neg (evalutae inner))
+    : if expr = ['add @left @right]
+        ? (add (evaluate left) (evaluate right))
+    : if expr = ['subtract @left @right]
+        ? (sub (evaluate left) (evaluate right))
+    : if expr = ['multiply @left @right]
+        ? (mul (evaluate left) (evaluate right))
+    : if expr = ['divide @left @right]
+        ? (div (evaluate left) (evaluate right))
+    : 'never;
+
+let calculate text = (evalute (parse (tokenize text)));
+
+(calculate "1 + 2 * -(3 + 4) + 5")
 ```
+
+## Shortcomings
+
+These are a few points I feel needs to be address, for this language to become even nicer.
+
+### Happy path pattern matching
+
+```rs
+let unwrap v =
+    if v = ['optional @value]
+        ? value
+        : 'never;
+```
+
+The `'never` in this case is arbitrarily selected.
+A better solution in my opinion, would be to have some syntax like this:
+```rs
+let unwrap v =
+    let v = ['optional @value]
+        in value;
+``` 
+I haven't quite decided on the syntax.
+In this case, if the value does not match the pattern, the program will halt in a standardized manner,
+instead of situations like this having to be managed on an individual case by case basis by the user.
+
+### Multiple matches
+
+```rs
+let evaluate expr =
+    if expr = ['int @value]
+        ? value
+    : if expr = ['negate @inner]
+        ? (neg (evalutae inner))
+    : if expr = ['add @left @right]
+        ? (add (evaluate left) (evaluate right))
+    : if expr = ['subtract @left @right]
+        ? (sub (evaluate left) (evaluate right))
+    : if expr = ['multiply @left @right]
+        ? (mul (evaluate left) (evaluate right))
+    : if expr = ['divide @left @right]
+        ? (div (evaluate left) (evaluate right))
+    : 'never;
+``` 
+
+I've found that `if`-syntax is often impractical for matching operations containing multiple alternatives.
+Instead, I'd like a syntax like Rust's Match expressions.[17]
+
+```rs
+let evaluate expr =
+    match expr
+        : ['int @value] ? value
+        : ['negate @inner] ? (neg (evalutae inner))
+        : ['add @left @right] ? (add (evaluate left) (evaluate right))
+        : ['subtract @left @right] ? (sub (evaluate left) (evaluate right))
+        : ['multiply @left @right] ? (mul (evaluate left) (evaluate right))
+        : ['divide @left @right] ? (div (evaluate left) (evaluate right));
+```
+I haven't decided on the syntax, but I kinda like this one.
+Again, if the expression doesn't match, the program halts in a standardized manner.
 
 ## Implementation
 
 I'm working on a quite naive interpreter written in Typescript.
+
+## Inspiration
+
+This language was, as stated before, primarily inspired by Typescript's type system.
+
+F# has similar syntax to what I've chosen. F# though, has a lot more features and is more complicated than the proposed language.
+
+## Conclusion
+
+idk what to put here
 
 [1]: https://www.typescriptlang.org/docs/handbook/2/generics.html
 [2]: https://www.typescriptlang.org/docs/handbook/2/narrowing.html
@@ -494,6 +646,7 @@ I'm working on a quite naive interpreter written in Typescript.
 [14]: https://stackoverflow.com/questions/12720955/is-there-a-formal-ideally-bnf-typescript-js-language-grammar-or-only-typescri
 [15]: https://github.com/microsoft/TypeScript/issues/1213
 [16]: https://en.wikipedia.org/wiki/Currying
+[17]: https://doc.rust-lang.org/reference/expressions/match-expr.html
 
 
 
