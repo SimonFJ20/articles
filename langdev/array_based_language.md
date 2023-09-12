@@ -254,15 +254,21 @@ Having all the other features of *Typescript* in the languages, is obviously und
 Wouldn't it be nice to have all the good parts without the bad?
 Yes, it would. Therefore let's make our own language with all the right ideas and none of the bad.
 
-### Spec
-
 This isn't a complete specification, just a slightly technical description of the language.
 
-#### Expressions
+The language is of the functional family, for example are values for the most part immutable.
 
-##### Symbol
+### Expressions
+
+#### Symbol
 
 A symbol is an identifiable literal value.
+
+Identifiable meaing two identical symbols are equal and two distinct symbols aren't, ie. `'a = 'a` and `'a != 'b`.
+
+```re
+/'[a-zA-Z0-9_]+/
+```
 
 ```rs
 'a
@@ -270,12 +276,13 @@ A symbol is an identifiable literal value.
 'foo_bar
 ```
 
-Identifiable meaing two identical symbols are equal, ie. `'a = 'a` and `'a != 'b`.
+#### Array
 
-##### Array
+A container for zero or more values.
 
-None, one or multiple values in a container.
-
+```ebnf
+arrayExpr ::= "[" expression* "]"
+```
 ```rs
 []
 ['a 'b 'c]
@@ -283,32 +290,42 @@ None, one or multiple values in a container.
 ```
 No comma seperation.
 
-##### Integer literal
+#### Integer literal
 
 Integers are syntactic suger for arrays of a specific length.
-
+```re
+/0|[1-9][0-9]*/
+```
 ```rs
 5 // is equivalent to [_ _ _ _ _]
 ```
 
-##### Character literal
+#### Character literal
 
 Characters are syntactic suger for integers with the ascii/unicode representation.
-
+```re
+/'([^\\]|\\([0trn'"]|x[0-9a-fA-F]{2}))'/
+```
 ```rs
 'a' // is equivalent to 96
 ```
 
-##### String literal
+#### String literal
 
-Strings are syntactic suger for arrays with characters represented as integers.
+Strings are syntactic suger for arrays with characters.
 
+```re
+/"([^\\]|\\([0trn'"]|x[0-9a-fA-F]{2}))*"/
+```
 ```rs
 "hello" // is equivalent to ['h' 'e' 'l' 'l' 'o']
 ```
 
 ##### Spread
 
+```ebnf
+spreadPattern ::= ".." pattern
+```
 ```rs
 ..v
 [a b] // [[..] [..]]
@@ -319,23 +336,35 @@ Strings are syntactic suger for arrays with characters represented as integers.
 
 ##### Application/Call
 
+```ebnf
+callExpr ::= "(" expression+ ")"
+```
 ```rs
 (operator arg1 arg2)
 (a)
 (a b)
 ```
 
-##### Conditional
+##### Conditional/If
 
+```ebnf
+if ::= "if" expression "=" pattern "?" expression ":" expression
+```
 ```rs
 if a = b
     ? c
     : d
 ```
 
-`a` is an expression, so are `c` and `d` although they're lazilier evaluated. `b` is a pattern optionally containing bound values.
+`a`, `c` and `d` are expressions. `b` is a pattern optionally containing bound values.
 
-##### Let
+##### Let/Binding
+
+A binding of an identifier with zero or more parameters, to an expression.
+
+```ebnf
+let ::= "let" IDENTIFIER+ "=" expression ";" expression
+```
 
 ```rs
 let a = 5;
@@ -346,9 +375,11 @@ b // fn x = [x x]
 (b 5) // [5 5]
 ```
 
-Uses the `let` keyword.
-
 ##### Lambda
+
+```ebnf
+fn ::= "fn" IDENTIFIER* "=" expression
+```
 
 ```rs
 let my_lambda = fn a b = (add a b)
@@ -356,38 +387,26 @@ let my_lambda = fn a b = (add a b)
 (my_lambda 2 3)
 ```
 
-Uses the `fn` keyword. 
-
-##### Curring
-
-Some some reason i chose to support currying.[16]
-
-```rs
-let a v = (add v 2)
-
-(a 5) // 7
-(a 3) // 5
-```
-
 ##### Pattern binding
 
+```ebnf
+pattern ::=  bind | spreadPattern | arrayPattern | groupPattern | IDENTIFIER | SYMBOL | INTEGER | CHARACTER | STRING
+bind ::= "@" IDENTIFIER ("=" pattern)?
+spreadPattern ::= ".." pattern
+arrayPattern ::= "[" pattern* "]"
+groupPattern ::= "(" pattern ")"
 ```
-let a v =
-    if v = ['add @left @right]
-        ? (add left right)
-        : 'invalid
 
-(a ['add 5 3]) // 8
-```
-
-```
+```rs
 let sum values =
     if values = [@value ..@rest]
         ? value + (sum rest)
         : 0 // empty
+
+(sum [1 2 3]) // 6
 ```
 
-#### Grammar
+#### EBNF Grammar
 
 ```ebnf
 program ::= expression
@@ -395,46 +414,39 @@ program ::= expression
 expression ::= let | fn | if | spreadExpr | arrayExpr | callExpr | groupExpr | IDENTIFIER | SYMBOL | INTEGER
 
 let ::= "let" IDENTIFIER+ "=" expression ";" expression
-
 fn ::= "fn" IDENTIFIER* "=" expression
-
 if ::= "if" expression "=" pattern "?" expression ":" expression
+spreadExpr ::= ".." expression
+arrayExpr ::= "[" expression* "]"
+callExpr ::= "(" expression+ ")"
+groupExpr ::= "(" expression ")"
 
-spreadExpr ::= ..expression
-
-arrayExpr ::= [expression*]
-
-callExpr ::= (expression+)
-
-groupExpr ::= (expression)
-
-pattern ::=  bind | spreadPattern | arrayPattern | groupPattern | IDENTIFIER | SYMBOL | INTEGER
-
+pattern ::=  bind | spreadPattern | arrayPattern | groupPattern | IDENTIFIER | SYMBOL | INTEGER | CHARACTER | STRING
 bind ::= "@" IDENTIFIER ("=" pattern)?
-
 spreadPattern ::= ..pattern
-
 arrayPattern ::= [pattern*]
-
 groupPattern ::= (pattern)
 
-SYMBOL ::= /('[a-zA-Z0-9_]+)|([0-9]+)/
+SYMBOL ::= /'[a-zA-Z0-9_]+/
 IDENTIFIER ::= /[a-zA-Z_][a-zA-Z0-9_]*/
 INTEGER ::= /[0-9]+/
+CHARACTER ::= /'([^\\]|\\([0trn'"]|x[0-9a-fA-F]{2}))'/
+STRING ::= /"([^\\]|\\([0trn'"]|x[0-9a-fA-F]{2}))*"/
 ```
 
-This is an EBNF grammar describing the language.
-All whitespace is ignored, except for it's delimiting capabilities, eg. `a b` and `ab` mean different things.
+## Example programs
 
-### Example programs
-
-#### Hello world
+### Hello world
 
 ```rs
 "Hello, world!"
 ```
+This programs will evaluate to the following.
+```rs
+"Hello, world!"
+```
 
-#### FizzBuzz
+### FizzBuzz
 
 ```rs
 let fizzbuzz n =
@@ -448,10 +460,13 @@ let fizzbuzz n =
 
 (map fizzbuzz (range 1 100))
 ```
-
-#### Calculator
-
 ```rs
+[1 2 "fizz" 4 "buzz" 6 ..]
+```
+
+### Calculator
+
+```ml
 let contains v vs =
     if vs = [@m ..@rest]
         ? if v = m
@@ -541,7 +556,7 @@ let evaluate expr =
     if expr = ['int @value]
         ? value
     : if expr = ['negate @inner]
-        ? (neg (evalutae inner))
+        ? (neg (evaluate inner))
     : if expr = ['add @left @right]
         ? (add (evaluate left) (evaluate right))
     : if expr = ['subtract @left @right]
@@ -554,12 +569,15 @@ let evaluate expr =
 
 let calculate text = (evalute (parse (tokenize text)));
 
-(calculate "1 + 2 * -(3 + 4) + 5")
+(calculate "1 + 2 * (3 + 4) + -5")
+```
+```rs
+10
 ```
 
-## Shortcomings
+## Additional features
 
-These are a few points I feel needs to be address, for this language to become even nicer.
+There are a few features I feel would make the language even better, although this would increase complexity of the language.
 
 ### Happy path pattern matching
 
@@ -574,10 +592,9 @@ The `'never` in this case is arbitrarily selected.
 A better solution in my opinion, would be to have some syntax like this:
 ```rs
 let unwrap v =
-    let v = ['optional @value]
+    let ['optional @value] = v
         in value;
 ``` 
-I haven't quite decided on the syntax.
 In this case, if the value does not match the pattern, the program will halt in a standardized manner,
 instead of situations like this having to be managed on an individual case by case basis by the user.
 
@@ -588,7 +605,7 @@ let evaluate expr =
     if expr = ['int @value]
         ? value
     : if expr = ['negate @inner]
-        ? (neg (evalutae inner))
+        ? (neg (evaluate inner))
     : if expr = ['add @left @right]
         ? (add (evaluate left) (evaluate right))
     : if expr = ['subtract @left @right]
@@ -606,29 +623,245 @@ Instead, I'd like a syntax like Rust's Match expressions.[17]
 ```rs
 let evaluate expr =
     match expr
-        : ['int @value] ? value
-        : ['negate @inner] ? (neg (evalutae inner))
-        : ['add @left @right] ? (add (evaluate left) (evaluate right))
-        : ['subtract @left @right] ? (sub (evaluate left) (evaluate right))
-        : ['multiply @left @right] ? (mul (evaluate left) (evaluate right))
-        : ['divide @left @right] ? (div (evaluate left) (evaluate right));
+        ? ['int @value] : value
+        ? ['negate @inner] : (neg (evaluate inner))
+        ? ['add @left @right] : (add (evaluate left) (evaluate right))
+        ? ['subtract @left @right] : (sub (evaluate left) (evaluate right))
+        ? ['multiply @left @right] : (mul (evaluate left) (evaluate right))
+        ? ['divide @left @right] : (div (evaluate left) (evaluate right));
 ```
-I haven't decided on the syntax, but I kinda like this one.
 Again, if the expression doesn't match, the program halts in a standardized manner.
+
+The `match`-syntax could also be used for happy path matching, like in the following example.
+```rs
+let unwrap v =
+    match v
+        ? ['optional @value] : in value;
+```
+
+### Nested bound patterns
+
+```rs
+let a = 
+    if a = [@outer = [@inner_a @inner_b]]
+        ? [outer inner_a inner_b]
+        : 'never;
+
+(a [1 2]) // [[1 2] 1 2]
+```
+
+## Static types
+
+The described languages does not have any proper sense of static typing, and is in fact dynamically typed.
+
+This has some benefits in terms om implementation.
+The lack of static typing simplifies the whole interpretation process, for example
+- less syntax needs to be parsed,
+- no type checker is needed,
+- and no complexities surrounding for example sum types.
+
+Some would even argue dynamic typing more effective for fast software development.
+Others, myself included, argue that soundly typechecked code is far easier to read and maintain,
+and expressive types aid in design.
+I haven't found conclusive research for either.
+
+There are some downsides of dynamic typing, such as greater difficult in AOT optimization and compilation.
+Compiling to optimized machine code requires information only available in runtime, meaning only a JIT compiler will suffice.[18][19]
+
+## Side effects
+
+Instead of addressing side effects in this article, I have chosen to defer it to a later one.
+
+There are 3 methods of achieving side effects in this language, as I see it.
+
+### OCaml-like allowing side effects and discarding values
+
+In OCaml, you can write the following syntax.[20]
+```ocaml
+let _ = print_endline "Foo" in
+    print_endline "Bar"
+```
+This will print the following.
+```
+Hello
+World
+```
+OCaml has a shorthand for `let _ = ... in ...`, the `;` (semicolon) operator.
+```ocaml
+print_endline "Foo";
+print_endline "Bar"
+```
+
+```ml
+let main =
+    (println "What's your name?"); // this expression gets discarded
+    if (readln) = @name
+        ? (println (concat "Hello " name))
+        : 'never;
+(main)
+```
+
+The same could be implemented for this language.
+
+### Haskell-like monads
+
+By introducing a new data type, a few builtin functions, a bit of runtime support, and possibly a bit of syntax,
+we can have the best of both worlds. We can have a pure functions and values languages, while still being able to produce side effects.[21]
+
+In Haskell we can write the following.[22]
+```hs
+main :: IO
+main = do
+    putStrLn "What's your name?"
+    name <- readLine
+    putStrLn ("Hello " ++ name)
+```
+This is syntax sugar for the following.
+```hs
+main :: IO
+main = (putStrLn "What's your name?")
+    `>>=` readLine
+        `>>=` (\x -> putStrLn ("Hello " ++ name))
+```
+`>>=` is the bind operator.
+
+By introducing some of the features in this languages, such as the `bind` function, the abstract IO data type,
+and provide functions such as `println` and `readln` returning the IO data type, we can write the following in our language.
+```ml
+let main =
+    (bind (println "What's your name?")
+        (fn _ = bind (readln)
+                (fn name = (println (concat "Hello " name)))));
+(main)
+```
+The above example isn't exactly pretty, so let's try and introduce some syntax-suger for making it prettier.
+```ml
+let main = do [
+    (println "What's your name?");
+    let name = (readln);
+    (println (concat "Hello " name));
+];
+```
+Here, the `do`-syntax takes a list of IO values, and bind them together, the same way the `bind` function would.
+The notation ignores the return value, if no `let ... =` is put in front of the expression,
+compared to the prior example, where we explicitly have to say `fn _ =`.
+
+### Monads through semantic values
+
+Instead of the IO data type, being some magical abstract type, we can instead just introduce some semantic values in the runtime.
+
+What do I mean by semantic values?
+When the following expression evaluates, it will produce the value that follows.
+```ml
+['a 12]
+```
+```
+['a 12]
+```
+If, instead of relaying all values back to the user, the runtime looks at the values, and determines if they should be further evaluated.
+For example, consider the following redefinition of `println`.
+```ml
+let println v = ['io 'println v];
+```
+When the following call is evaluated, it will produce the value that follows.
+```ml
+(println "foo bar")
+```
+```ml
+['io 'println "foo bar"]
+```
+If we then encode the value pattern in the runtime, we can make it perform the side effect, and print the following to the console.
+```
+foo bar
+```
+Using lambdas, we can do the same with the other monadic and side effectious operations.
+```ml
+let io_bind a f = ['io 'bind a f];
+
+let readln = ['io 'readln];
+```
+We can now do the following.
+```ml
+let main =
+    (bind (println "What's your name?")
+        (fn _ = bind (readln)
+                (fn name = (println (concat "Hello " name)))));
+(main)
+```
+This will produce the following value directly.
+```ml
+['io 'bind
+    ['io 'println "What's your name?"]
+    fn _ = ['io 'bind
+        ['io 'readln]
+        fn name = ['io 'println (concat "Hello " name)]
+    ]
+]
+```
+The runtime can now recognize and further evaluate the value above, and produce the desired side effects.
+
+## Builtin/standard library
+
+I have not decided on the style and extent of the built in functions and standard provided functions.
+The vast majority of functions can be implemented by using the provided constructs.
+For an example of this, look at the following example of an `add` function.
+```ml
+let add left right = [..left ..right];
+```
+Since integers are syntax suger for arrays with a specified length, this function is valid.
+
+There are however downsides to constructing the majority of *low level*-functions in the languages itself, such as the massive overhead compared to builtin functions.
+An example of the massive difference overhead, look at the following in-language definition of `mul` (multiply).
+```ml
+let mul_internal left right acc =
+    if left extends [_ ..@rest]
+        ? (mul_internal rest right [..acc ..right])
+        : acc;
+
+let mul left right = (mul_internal left right [])
+```
+If we visually evaluate `(mul 3 4)` (`3 * 4`) by means of substitution, we get the following execution.
+```ml
+(mul 3 4)
+(mul [_ _ _] [_ _ _ _])
+(mul_internal [_ _ _] [_ _ _ _] [])
+if [_ _ _] extends [_ ..@rest] ? (mul_internal rest [_ _ _ _] [..[] ..[_ _ _ _]]) : []
+(mul_internal [_ _] [_ _ _ _] [_ _ _ _])
+if [_ _] extends [_ ..@rest] ? (mul_internal rest [_ _ _ _] [..[_ _ _ _] ..[_ _ _ _]]) : [_ _ _ _]
+(mul_internal [_] [_ _ _ _] [_ _ _ _ _ _ _ _])
+if [_] extends [_ ..@rest] ? (mul_internal rest [_ _ _ _] [..[_ _ _ _ _ _ _ _] ..[_ _ _ _]]) : [_ _ _ _ _ _ _ _]
+(mul_internal [] [_ _ _ _] [_ _ _ _ _ _ _ _ _ _ _ _])
+if [] extends [_ ..@rest] ? (mul_internal rest [_ _ _ _] [..[_ _ _ _ _ _ _ _ _ _ _ _] ..[_ _ _ _]]) : [_ _ _ _ _ _ _ _ _ _ _ _]
+[_ _ _ _ _ _ _ _ _ _ _ _]
+```
+As evident, a multiply operation done this way, is in fact, not very efficient. Even with optimizations such as add the lengths of multiple spread arrays with insignificant elements.
 
 ## Implementation
 
 I'm working on a quite naive interpreter written in Typescript.
+It is by no means feature complete, nor super optimized. I'll therefore choose to defer implementation to a future article.
 
 ## Inspiration
 
 This language was, as stated before, primarily inspired by Typescript's type system.
 
-F# has similar syntax to what I've chosen. F# though, has a lot more features and is more complicated than the proposed language.
+The syntax is heavily inspired by ML family languages, such as SML[23], OCaml[24] and F#[25].
+
+Compared to it's inspiring languages, this languages is a lot simpler. There's less syntax, less features, less semantics and less syntax suger.
 
 ## Conclusion
 
-idk what to put here
+What we have here, is a simple language, which is 
+- simple to understand,
+- simple to specify,
+- simple to implement interpreters for
+- and I'd argue, simple to program in.
+There are no implicit conversions of types, no hard to see null dereferences and no invisible exceptions.
+The code is mathematically sound and doesn't expose unnecessary low level control, prone to bugs and security vulnurabilities.
+The semantics are simple to reason about. There are no data races, no dangling pointers, no unfreed memory, no hard-to-refactor global variables.
+
+I think simple languages like this have potential for improving developer experience, compared to the modern day jack-of-all-trades languages,
+which have massive syntaxes, incredible difficult to reason about semantic, and take years to become proficient in.
 
 [1]: https://www.typescriptlang.org/docs/handbook/2/generics.html
 [2]: https://www.typescriptlang.org/docs/handbook/2/narrowing.html
@@ -647,7 +880,14 @@ idk what to put here
 [15]: https://github.com/microsoft/TypeScript/issues/1213
 [16]: https://en.wikipedia.org/wiki/Currying
 [17]: https://doc.rust-lang.org/reference/expressions/match-expr.html
-
+[18]: https://en.wikipedia.org/wiki/Ahead-of-time_compilation
+[19]: https://en.wikipedia.org/wiki/Just-in-time_compilation
+[20]: https://en.wikipedia.org/wiki/Just-in-time_compilation
+[21]: https://www.haskell.org/tutorial/io.html
+[22]: https://en.wikipedia.org/wiki/Monad_(functional_programming)
+[23]: https://en.wikipedia.org/wiki/Standard_ML
+[24]: https://ocaml.org/docs/data-types
+[25]: https://learn.microsoft.com/en-us/dotnet/fsharp/language-reference/
 
 
 
