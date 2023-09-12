@@ -668,14 +668,14 @@ add_five // fn right = (add 5 right)
 
 The described languages does not have any proper sense of static typing, and is in fact dynamically typed.
 
-This has some benefits in terms om implementation.
+This has some benefits in terms of implementation.
 The lack of static typing simplifies the whole interpretation process, for example
 - less syntax needs to be parsed,
 - no type checker is needed,
 - and no complexities surrounding for example sum types.
 
-Some would even argue dynamic typing more effective for fast software development.
-Others, myself included, argue that soundly typechecked code is far easier to read and maintain,
+Some would even argue, that dynamic typing is more effective for fast software development.
+Others, myself included, argue that soundly type checked code is far easier to read and maintain,
 and expressive types aid in design.
 I haven't found conclusive research for either.
 
@@ -684,7 +684,7 @@ Compiling to optimized machine code requires information only available in runti
 
 ## Side effects
 
-Instead of addressing side effects in this article, I have chosen to defer it to a later one.
+Instead of addressing side effects conclusively in this article, I have chosen to defer it to a later one.
 
 There are 3 methods of achieving side effects in this language, as I see it.
 
@@ -790,7 +790,7 @@ foo bar
 ```
 Using lambdas, we can do the same with the other monadic and side effectious operations.
 ```ml
-let io_bind a f = ['io 'bind a f];
+let bind a f = ['io 'bind a f];
 
 let readln = ['io 'readln];
 ```
@@ -804,9 +804,11 @@ let main =
 ```
 This will produce the following value directly.
 ```ml
-['io 'bind
+[
+    'io 'bind
     ['io 'println "What's your name?"]
-    fn _ = ['io 'bind
+    fn _ = [
+        'io 'bind
         ['io 'readln]
         fn name = ['io 'println (concat "Hello " name)]
     ]
@@ -872,6 +874,7 @@ What we have here, is a simple language, which is
 - simple to specify,
 - simple to implement interpreters for
 - and I'd argue, simple to program in.
+
 There are no implicit conversions of types, no hard to see null dereferences and no invisible exceptions.
 The code is mathematically sound and doesn't expose unnecessary low level control, prone to bugs and security vulnurabilities.
 The semantics are simple to reason about. There are no data races, no dangling pointers, no unfreed memory, no hard-to-refactor global variables.
