@@ -109,14 +109,14 @@ type Contains<V, VS extends any[]> =
 type A = Contains<5, [1, 2, 3]>; // false
 type B = Contains<"bar", ["foo", "bar", "baz"]>; // true
 ```
-The quick ones among you would already have realised, that Typescript type system is Turing complete as fuck.[10]
+The quick ones among you would already have realized, that Typescript type system is Turing complete as fuck.[10]
 (Except for the recursion depth for type instantiations, which have methods of partial mitigation.[11])
 This is because we conform to the 3 rules of a turing complete programming language, consisting of:
 1. Sequence (we have recursion)
 2. Selection (we have conditional)
 3. Iteration (we have recursion)
 
-Also notice the lack of ability to do anything, meaning no side effects, and the way types definitions are essentially functions, meaning the what we have is a purely functional programming language.
+Also notice the lack of ability to do anything, meaning no side effects, and the way type definitions are essentially functions, thus meaning, that what we have, is a purely functional programming language.
 
 Now with this newly discovered Turing complete purely functional programming language of ours, that being Typescript's type system,
 we could, for example, make a PEMDAS compliant calculator, including a full set of signed integer arithmetic operations add/subtract/multiply/divide/remainder/exponentiation, including comparison operators lt/lte/gt/gte/equal/not equal,
@@ -215,7 +215,7 @@ What do I not like about Typescript:
 
 Typescript isn't inherently slow, just the fact that it's evaluated through *Typescript*'s type checker.
 
-Without having done any performance testing myself, I can say from experience, that even simple program using a bit of recursion can take several 10's of seconds to evaluate.
+Without having done any performance testing myself, I can say from experience, that even simple program using a bit of recursion can take several tens of seconds to evaluate.
 Compare this to modern day Javascript in the browser and it's abysmally slow.
 
 There's also the problem of recursion depth.
