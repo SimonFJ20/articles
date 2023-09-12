@@ -215,7 +215,7 @@ What do I not like about Typescript:
 
 Typescript isn't inherently slow, just the fact that it's evaluated through *Typescript*'s type checker.
 
-Without having done any performance testing myself, I can say from experience, that even simple program using a bit of recursion can take several tens of seconds to evaluate.
+Without having done any scientific performance testing myself, I can say from experience, that even simple program using a bit of recursion can take several tens of seconds to evaluate.
 Compare this to modern day Javascript in the browser and it's abysmally slow.
 
 There's also the problem of recursion depth.
