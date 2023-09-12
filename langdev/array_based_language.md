@@ -15,7 +15,7 @@ To make this make sense, I'll have to explain a bit about typescript.
 
 Typescript has a type system (WOW :exploding_head:!).
 Typescript's type system contains some quite advanced features.
-One such feature is its generic type parameters (called "generics").[1]
+One such feature is its [generic type parameters (called "generics")](https://www.typescriptlang.org/docs/handbook/2/generics.html).
 ```ts
 const foo = <T>(bar: T): T => bar;
 
@@ -23,7 +23,7 @@ foo<number>(123); // T = number
 foo("foo"); // T = string
 ```
 These generics can be constrained, such that we only allow a specific subset of types.
-Typescript calls this narrowing.[2]
+Typescript calls this [narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html).
 ```ts
 const constrained = <T extends number>(a: T): T => a;
 
@@ -39,15 +39,15 @@ const c: number[] = [1, 2, 3];
 const d: [string, 123] = ["foo", 123];
 ```
 Not represented here are the `any`, `void`, `unknown`, `never`, `null`, `undefined` types and object literal types, which are handy, but not necessary.
-The local (name referring to variable or constant value) `b` is what Typescript calls literal types.[3]
+The local (name referring to variable or constant value) `b` is what Typescript calls [literal types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#literal-types).
 Literal types represent a specific value, eg. the `b` has the type `12`, meaning it'll only accept the value `12` specifically, not other numbers like `7`, `-123` or `3.14`; 
-The local `a` is what Typescript calls primitive types.[4]
+The local `a` is what Typescript calls [primitive types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#the-primitives-string-number-and-boolean).
 Primitives types are the set of all literal types of a class of values. For example, the type `number` is a type of the set of all numbers, meaning the local `a` can accept all number values such as `7`, `-123` or `3.14`.
-The local `c` has an array type, which is what you'd expect.[5]
-the local `d` has what Typescript calls Tuple Types.[6]
+The local `c` has an [array type](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#arrays), which is what you'd expect.
+the local `d` has what Typescript calls [Tuple Types](https://www.typescriptlang.org/docs/handbook/2/objects.html#tuple-types).
 
-Now these tuple types are quite interesting, as Typescript lets us do array operations on them.
-To see what I mean, let's first look at array operations on array values.[8]
+Now these tuple types are quite interesting, as Typescript lets us do [array operations](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax#spread_in_array_literals) on them.
+To see what I mean, let's first look at array operations on array values.
 ```ts
 const a = [1, 2, 3];
 const b = [...a, 4]; // [1, 2, 3, 4]
@@ -86,7 +86,7 @@ const a = (b: number): string =>
 const c = a(5); // "b is five";
 const c = a(3); // "b is not five";
 ```
-Typescript provides the same construct for types, in what they call Conditional Types.[9]
+Typescript provides the same construct for types, in what they call [Conditional Types](https://www.typescriptlang.org/docs/handbook/2/conditional-types.html).
 ```ts
 type A<B extends number> =
     B extends 5
@@ -109,8 +109,8 @@ type Contains<V, VS extends any[]> =
 type A = Contains<5, [1, 2, 3]>; // false
 type B = Contains<"bar", ["foo", "bar", "baz"]>; // true
 ```
-The quick ones among you would already have realized, that Typescript type system is Turing complete as fuck.[10]
-(Except for the recursion depth for type instantiations, which have methods of partial mitigation.[11])
+The quick ones among you would already have realized, that Typescript type system is [Turing complete as fuck](https://github.com/microsoft/TypeScript/issues/14833).
+(Except for the recursion depth for type instantiations, which have [methods of partial mitigation](../techniques/improve_typescript_type_recursion_depth.md).)
 This is because we conform to the 3 rules of a turing complete programming language, consisting of:
 1. Sequence (we have recursion)
 2. Selection (we have conditional)
@@ -120,7 +120,7 @@ Also notice the lack of ability to do anything, meaning no side effects, and the
 
 Now with this newly discovered Turing complete purely functional programming language of ours, that being Typescript's type system,
 we could, for example, make a PEMDAS compliant calculator, including a full set of signed integer arithmetic operations add/subtract/multiply/divide/remainder/exponentiation, including comparison operators lt/lte/gt/gte/equal/not equal,
-and of course a X86-64 generator for good measures. And this is exactly what I did.[12]
+and of course a X86-64 generator for good measures. [And this is exactly what I did](https://gist.github.com/SimonFJ20/1bbfd17c323acb78ad46fef2af12d968).
 
 ![image](https://github.com/SimonFJ20/articles/assets/28040410/baf907d9-f535-4091-b8d2-4e5ccaaf9223)
 ![image](https://github.com/SimonFJ20/articles/assets/28040410/34bca835-96b6-4ac3-8618-5c292e7332c5)
@@ -159,7 +159,7 @@ arrayType ::= type[]
 spreadType ::= "..." type
 literalType ::= INT_LITERAL | STRING_LITERAL | "true" | "false" | "null" | "undefined"
 ```
-The above is the entire grammar of the parts of Typescript I'm interested in expressed in EBNF.[13][14]
+The above is the [grammar of the parts of Typescript](https://stackoverflow.com/questions/12720955/is-there-a-formal-ideally-bnf-typescript-js-language-grammar-or-only-typescri) I'm interested in expressed in [EBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form).[14]
 This evidently represents a very simple language, but we've just seen that just this is Turing complete and, in my opinion, totally usable.
 
 #### Ergonomic syntax
@@ -223,7 +223,7 @@ There's also the problem of recursion depth.
 ![image](https://github.com/SimonFJ20/articles/assets/28040410/26fec0ae-5376-4d9e-a25c-d4f981a2116b)
 
 This limits the size of programs.
-There are ways to improve this, but only slightly.[11]
+There are [ways to improve this](../techniques/improve_typescript_type_recursion_depth.md), but only slightly.
 
 #### Side effects
 
@@ -241,7 +241,7 @@ For example, there are no way to
 
 #### No higher kinded types
 
-*Typescript* does not suppert higher kinded types.[15]
+[*Typescript* does not suppert higher kinded types](https://github.com/microsoft/TypeScript/issues/1213).
 We could've used them as lambda functions, implying polymorphism.
 But in my experience, i haven't found the lack of parametric polymorphism to be crippling. It's just a nice to have.
 
@@ -618,7 +618,7 @@ let evaluate expr =
 ``` 
 
 I've found that `if`-syntax is often impractical for matching operations containing multiple alternatives.
-Instead, I'd like a syntax like Rust's Match expressions.[17]
+Instead, I'd like a syntax like [Rust's Match expressions](https://doc.rust-lang.org/reference/expressions/match-expr.html).
 
 ```rs
 let evaluate expr =
@@ -650,6 +650,20 @@ let a =
 (a [1 2]) // [[1 2] 1 2]
 ```
 
+### Currying
+
+Being able to partially apply a function, can sometimes be useful.
+The following is an example of [Currying](https://en.wikipedia.org/wiki/Currying).
+
+```rs
+let add_five = (add 5);
+
+add_five // fn right = (add 5 right)
+
+(add_five 3) // 8
+(add_five 5) // 10
+```
+
 ## Static types
 
 The described languages does not have any proper sense of static typing, and is in fact dynamically typed.
@@ -665,8 +679,8 @@ Others, myself included, argue that soundly typechecked code is far easier to re
 and expressive types aid in design.
 I haven't found conclusive research for either.
 
-There are some downsides of dynamic typing, such as greater difficult in AOT optimization and compilation.
-Compiling to optimized machine code requires information only available in runtime, meaning only a JIT compiler will suffice.[18][19]
+There are some downsides of dynamic typing, such as greater difficult in [AOT](https://en.wikipedia.org/wiki/Ahead-of-time_compilation) optimization and compilation.
+Compiling to optimized machine code requires information only available in runtime, meaning only a [JIT](https://en.wikipedia.org/wiki/Just-in-time_compilation) compiler will suffice.
 
 ## Side effects
 
@@ -676,7 +690,7 @@ There are 3 methods of achieving side effects in this language, as I see it.
 
 ### OCaml-like allowing side effects and discarding values
 
-In OCaml, you can write the following syntax.[20]
+In OCaml, you can write [the following syntax](https://cs3110.github.io/textbook/chapters/basics/printing.html#printing).
 ```ocaml
 let _ = print_endline "Foo" in
     print_endline "Bar"
@@ -706,9 +720,9 @@ The same could be implemented for this language.
 ### Haskell-like monads
 
 By introducing a new data type, a few builtin functions, a bit of runtime support, and possibly a bit of syntax,
-we can have the best of both worlds. We can have a pure functions and values languages, while still being able to produce side effects.[21]
+we can have the best of both worlds. We can have a pure functions and values languages, while still being able to produce side effects, with the help of [monads](https://en.wikipedia.org/wiki/Monad_(functional_programming)).
 
-In Haskell we can write the following.[22]
+In Haskell we can write [the following](https://www.haskell.org/tutorial/io.html).
 ```hs
 main :: IO
 main = do
@@ -847,7 +861,7 @@ It is by no means feature complete, nor super optimized. I'll therefore choose t
 
 This language was, as stated before, primarily inspired by Typescript's type system.
 
-The syntax is heavily inspired by ML family languages, such as SML[23], OCaml[24] and F#[25].
+The syntax is heavily inspired by ML family languages, such as [SML](https://en.wikipedia.org/wiki/Standard_ML), [OCaml](https://ocaml.org/docs/data-types) and [F#](https://learn.microsoft.com/en-us/dotnet/fsharp/language-reference/).
 
 Compared to it's inspiring languages, this languages is a lot simpler. There's less syntax, less features, less semantics and less syntax suger.
 
@@ -865,31 +879,26 @@ The semantics are simple to reason about. There are no data races, no dangling p
 I think simple languages like this have potential for improving developer experience, compared to the modern day jack-of-all-trades languages,
 which have massive syntaxes, incredible difficult to reason about semantic, and take years to become proficient in.
 
-[1]: https://www.typescriptlang.org/docs/handbook/2/generics.html
-[2]: https://www.typescriptlang.org/docs/handbook/2/narrowing.html
-[3]: https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#literal-types
-[4]: https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#the-primitives-string-number-and-boolean
-[5]: https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#arrays
-[6]: https://www.typescriptlang.org/docs/handbook/2/objects.html#tuple-types
-<!-- [7]: https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-aliases -->
-[8]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax#spread_in_array_literals
-[9]: https://www.typescriptlang.org/docs/handbook/2/conditional-types.html
-[10]: https://github.com/microsoft/TypeScript/issues/14833
-[11]: /techniques/improve_typescript_type_recursion_depth.md
-[12]: https://gist.github.com/SimonFJ20/1bbfd17c323acb78ad46fef2af12d968
-[13]: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form
-[14]: https://stackoverflow.com/questions/12720955/is-there-a-formal-ideally-bnf-typescript-js-language-grammar-or-only-typescri
-[15]: https://github.com/microsoft/TypeScript/issues/1213
-[16]: https://en.wikipedia.org/wiki/Currying
-[17]: https://doc.rust-lang.org/reference/expressions/match-expr.html
-[18]: https://en.wikipedia.org/wiki/Ahead-of-time_compilation
-[19]: https://en.wikipedia.org/wiki/Just-in-time_compilation
-[20]: https://en.wikipedia.org/wiki/Just-in-time_compilation
-[21]: https://www.haskell.org/tutorial/io.html
-[22]: https://en.wikipedia.org/wiki/Monad_(functional_programming)
-[23]: https://en.wikipedia.org/wiki/Standard_ML
-[24]: https://ocaml.org/docs/data-types
-[25]: https://learn.microsoft.com/en-us/dotnet/fsharp/language-reference/
+## Sources
+
+- [Jakobsen, S. F. *Improve Typescript type recursion depth*](../techniques/improve_typescript_type_recursion_depth.md)
+- [Jakobsen, S. F. *A PEMDAS Compliant Math Parser implemented entirely in Typescript's Type System*](https://gist.github.com/SimonFJ20/1bbfd17c323acb78ad46fef2af12d968)
+- [Clarkson, M. R. *OCaml Programming: Correct + Efficient + Beautiful*](https://cs3110.github.io/textbook/chapters/basics/printing.html#printing)
+- [Hudak, P., Peterson, J., Fasel, J. *A Gentle Introduction to Haskell* Version 98](https://www.haskell.org/tutorial/io.html)
+- [GitHub, microsoft/TypeScript *TypeScripts Type System is Turing Complete* #14833](https://github.com/microsoft/TypeScript/issues/14833)
+- [GitHub, microsoft/TypeScript *Allow classes to be parametric in other parametric classes* #1213](https://github.com/microsoft/TypeScript/issues/1213)
+- [MDN Web Docs *Spread syntax*](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax#spread_in_array_literals)
+- [Typescript *Handbook*](https://www.typescriptlang.org/docs/handbook/intro.html)
+- [The Rust Reference *`match` expressions*](https://doc.rust-lang.org/reference/expressions/match-expr.html)
+- [OCaml Documentation](https://ocaml.org/docs/data-types)
+- [Microsoft *F# Language Reference*](https://learn.microsoft.com/en-us/dotnet/fsharp/language-reference/)
+- [Wikipedia, *Extended Backus-Naur form (EBNF)*](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form)
+- [Wikipedia *Currying*](https://en.wikipedia.org/wiki/Currying)
+- [Wikipedia *Ahead-of-time compilation (AOT)*](https://en.wikipedia.org/wiki/Ahead-of-time_compilation)
+- [Wikipedia *Just-in-time compilation (JIT)*](https://en.wikipedia.org/wiki/Just-in-time_compilation)
+- [Wikipedia *Monad*](https://en.wikipedia.org/wiki/Monad_(functional_programming))
+- [Wikipedia *Standard ML*](https://en.wikipedia.org/wiki/Standard_ML)
+- [Stackoverflow, *Is there a formal (ideally BNF) typescript js language grammar (or only typescript subset)?*](https://stackoverflow.com/questions/12720955/is-there-a-formal-ideally-bnf-typescript-js-language-grammar-or-only-typescri)
 
 
 
