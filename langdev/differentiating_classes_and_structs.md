@@ -1,5 +1,5 @@
 
-# Differentiating classes and structs
+# [WIP] Differentiating classes and structs
 
 _Simon F. Jakobsen_
 
