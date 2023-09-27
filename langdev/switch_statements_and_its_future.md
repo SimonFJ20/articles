@@ -9,7 +9,7 @@ Now what do I mean by this? Let's remind ourselves what the switch-statement is.
 
 To explain the construct, we have to look a bit at some assembly.
 
-```x86asm
+```asm
 example:
     ; ...
     call traffic_light_color
@@ -17,7 +17,7 @@ example:
 Now `eax` contains the color of the traffic light, represented as either `1`, `2` or `3`, representing `red`, `yellow` and `green` respectively.
 Now we have to make some decision depending on the result.
 If it's green, we'll drive. If it's red, we'll stop, if it's green we'll go and if it's yellow, we'll put it in 2nd gear and go anyway.
-```x86asm
+```asm
 %define RED 1
 %define YELLOW 2
 %define GREEN 3
